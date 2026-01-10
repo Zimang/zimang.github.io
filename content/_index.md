@@ -5,23 +5,20 @@ layout: landing
 
 <div class="book-hero">
 
-# HUGO BOOK {anchor=false}
-[Hugo](https://gohugo.io) documentation theme as simple as plain book
+# 黄子明的小背包{anchor=false}
 
-[{{< badge style="info" title="Hugo" value="0.146" >}}](https://github.com/gohugoio/hugo/releases/tag/v0.146.7)
-[{{< badge style="default" title="License" value="MIT" >}}](https://github.com/alex-shpak/hugo-book/blob/main/LICENSE)
 
 {{<button href="/docs/example">}}Explore{{</button>}}
 
 </div>
 
 {{% columns %}}
-- ## What Hugo-Book Theme Is
+- ## 
   Hugo book theme is primarily designed to create technical documentation sites that are easy to read, write, navigate and maintain. It is an attempt to create a sustainable web project.
 
 - ## What Hugo-Book Theme Is Not
   Book theme is not trying to implement all features but to create a starting point. It is mostly feature complete and gets updated and improved to stay relevant with Hugo and modern web.
-{{% /columns %}}
+  {{% /columns %}}
 
 
 {{% columns %}}
@@ -39,7 +36,7 @@ layout: landing
   ## Minimalistic
   For real, it is very minimalistic, black on white. No extra tools are needed to build the site, only Hugo. No heavy JS or CSS frameworks included.
   {{< /card >}}
-{{% /columns %}}
+  {{% /columns %}}
 
 {{% columns %}}
 - {{< card >}}
@@ -63,4 +60,4 @@ layout: landing
   ### Made to be extendable
   There are multiple points to inject own styles and templates to make your documentation your own.
   {{< /card >}}
-{{% /columns %}}
+  {{% /columns %}}
