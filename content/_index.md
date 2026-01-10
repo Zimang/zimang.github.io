@@ -8,7 +8,7 @@ layout: landing
 # 黄子明的小背包{anchor=false}
 
 
-{{<button href="/docs/example">}}Explore{{</button>}}
+{{<button href="/docs/my2026">}}Explore{{</button>}}
 
 </div> 
 
