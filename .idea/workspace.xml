@@ -4,10 +4,7 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e77ac759-9a95-4cd6-a089-d9194c7f5802" name="更改" comment="init 2">
-      <change beforePath="$PROJECT_DIR$/content/my2026/2do/gemeDev/c.md" beforeDir="false" afterPath="$PROJECT_DIR$/content/my2026/2do/gemeDev/c.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/index.xml" beforeDir="false" afterPath="$PROJECT_DIR$/public/index.xml" afterDir="false" />
-    </list>
+    <list default="true" id="e77ac759-9a95-4cd6-a089-d9194c7f5802" name="更改" comment="init 2" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
