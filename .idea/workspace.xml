@@ -5,7 +5,83 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e77ac759-9a95-4cd6-a089-d9194c7f5802" name="更改" comment="init 2">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/content/my2026/2do/游戏开发转职计划/能力节点.md" beforeDir="false" afterPath="$PROJECT_DIR$/content/my2026/2do/游戏开发转职计划/能力节点.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/404.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/404.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/categories/development/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/categories/development/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/categories/development/index.xml" beforeDir="false" afterPath="$PROJECT_DIR$/public/categories/development/index.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/categories/development/page/1/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/categories/development/page/1/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/categories/golang/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/categories/golang/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/categories/golang/index.xml" beforeDir="false" afterPath="$PROJECT_DIR$/public/categories/golang/index.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/categories/golang/page/1/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/categories/golang/page/1/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/categories/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/categories/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/categories/index.xml" beforeDir="false" afterPath="$PROJECT_DIR$/public/categories/index.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/example/collapsed/3rd-level/4th-level/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/example/collapsed/3rd-level/4th-level/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/example/collapsed/3rd-level/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/example/collapsed/3rd-level/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/example/collapsed/3rd-level/index.xml" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/example/collapsed/3rd-level/index.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/example/collapsed/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/example/collapsed/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/example/collapsed/index.xml" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/example/collapsed/index.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/example/hidden/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/example/hidden/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/example/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/example/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/example/index.xml" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/example/index.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/example/table-of-contents/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/example/table-of-contents/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/example/table-of-contents/index.xml" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/example/table-of-contents/index.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/example/table-of-contents/with-toc/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/example/table-of-contents/with-toc/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/example/table-of-contents/without-toc/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/example/table-of-contents/without-toc/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/index.xml" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/index.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/shortcodes/buttons/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/shortcodes/buttons/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/shortcodes/columns/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/shortcodes/columns/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/shortcodes/details/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/shortcodes/details/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/shortcodes/experimental/asciinema/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/shortcodes/experimental/asciinema/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/shortcodes/experimental/badges/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/shortcodes/experimental/badges/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/shortcodes/experimental/cards/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/shortcodes/experimental/cards/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/shortcodes/experimental/images/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/shortcodes/experimental/images/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/shortcodes/experimental/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/shortcodes/experimental/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/shortcodes/experimental/index.xml" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/shortcodes/experimental/index.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/shortcodes/hints/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/shortcodes/hints/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/shortcodes/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/shortcodes/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/shortcodes/index.xml" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/shortcodes/index.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/shortcodes/katex/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/shortcodes/katex/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/shortcodes/mermaid/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/shortcodes/mermaid/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/shortcodes/section/first-page/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/shortcodes/section/first-page/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/shortcodes/section/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/shortcodes/section/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/shortcodes/section/index.xml" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/shortcodes/section/index.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/shortcodes/section/second-page/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/shortcodes/section/second-page/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/shortcodes/steps/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/shortcodes/steps/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/docs/shortcodes/tabs/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/docs/shortcodes/tabs/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/index.xml" beforeDir="false" afterPath="$PROJECT_DIR$/public/index.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/posts/creating-a-new-theme/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/posts/creating-a-new-theme/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/posts/goisforlovers/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/posts/goisforlovers/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/posts/hugoisforlovers/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/posts/hugoisforlovers/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/posts/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/posts/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/posts/index.xml" beforeDir="false" afterPath="$PROJECT_DIR$/public/posts/index.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/posts/migrate-from-jekyll/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/posts/migrate-from-jekyll/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/posts/page/1/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/posts/page/1/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/showcases/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/showcases/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/sitemap.xml" beforeDir="false" afterPath="$PROJECT_DIR$/public/sitemap.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/tags/development/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/tags/development/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/tags/development/index.xml" beforeDir="false" afterPath="$PROJECT_DIR$/public/tags/development/index.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/tags/development/page/1/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/tags/development/page/1/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/tags/go/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/tags/go/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/tags/go/index.xml" beforeDir="false" afterPath="$PROJECT_DIR$/public/tags/go/index.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/tags/go/page/1/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/tags/go/page/1/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/tags/golang/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/tags/golang/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/tags/golang/index.xml" beforeDir="false" afterPath="$PROJECT_DIR$/public/tags/golang/index.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/tags/golang/page/1/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/tags/golang/page/1/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/tags/hugo/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/tags/hugo/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/tags/hugo/index.xml" beforeDir="false" afterPath="$PROJECT_DIR$/public/tags/hugo/index.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/tags/hugo/page/1/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/tags/hugo/page/1/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/tags/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/tags/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/tags/index.xml" beforeDir="false" afterPath="$PROJECT_DIR$/public/tags/index.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/tags/templates/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/tags/templates/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/tags/templates/index.xml" beforeDir="false" afterPath="$PROJECT_DIR$/public/tags/templates/index.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/tags/templates/page/1/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/tags/templates/page/1/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/tags/themes/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/tags/themes/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/tags/themes/index.xml" beforeDir="false" afterPath="$PROJECT_DIR$/public/tags/themes/index.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/tags/themes/page/1/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/tags/themes/page/1/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/themes/hugo-book/hugo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/themes/hugo-book/hugo.toml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -35,6 +111,7 @@
     "RunOnceActivity.GoLinterPluginOnboardingV2": "true",
     "RunOnceActivity.GoLinterPluginStorageMigration": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.go.formatter.settings.were.checked": "true",
     "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
@@ -73,6 +150,11 @@
     <option name="version" value="3" />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
+    <option name="OPEN_GENERIC_TABS">
+      <map>
+        <entry key="af88ace2-554e-4d3d-b9fd-76808b932d5b" value="TOOL_WINDOW" />
+      </map>
+    </option>
     <option name="TAB_STATES">
       <map>
         <entry key="MAIN">
@@ -90,6 +172,11 @@
                 </map>
               </option>
             </State>
+          </value>
+        </entry>
+        <entry key="af88ace2-554e-4d3d-b9fd-76808b932d5b">
+          <value>
+            <State />
           </value>
         </entry>
       </map>

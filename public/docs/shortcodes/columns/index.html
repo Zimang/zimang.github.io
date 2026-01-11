@@ -1,42 +1,442 @@
-<!doctype html><html lang=en-us dir=ltr><head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset=UTF-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content='Columns#Columns help organize shorter pieces of content horizontally for readability. columns shortcode styles markdown list as up to 3 columns.
-Example#{{% columns [ratio="1:1"] [class="..."] %}} - ### Left Content Lorem markdownum insigne... - ### Mid Content Lorem markdownum insigne... - ### Right Content Lorem markdownum insigne... {{% /columns %}} Left Content#Lorem markdownum insigne. Olympo signis Delphis! Retexi Nereius nova develat stringit, frustra Saturnius uteroque inter! Oculis non ritibus Telethusa protulit, sed sed aere valvis inhaesuro Pallas animam: qui quid, ignes. Miseratus fonte Ditis conubia.
-'><meta name=theme-color media="(prefers-color-scheme: light)" content="#ffffff"><meta name=theme-color media="(prefers-color-scheme: dark)" content="#343a40"><meta name=color-scheme content="light dark"><meta property="og:url" content="http://localhost:1313/docs/shortcodes/columns/"><meta property="og:site_name" content="My New Hugo Site"><meta property="og:title" content="My New Hugo Site"><meta property="og:description" content='Columns#Columns help organize shorter pieces of content horizontally for readability. columns shortcode styles markdown list as up to 3 columns.
-Example#{{% columns [ratio="1:1"] [class="..."] %}} - ### Left Content Lorem markdownum insigne... - ### Mid Content Lorem markdownum insigne... - ### Right Content Lorem markdownum insigne... {{% /columns %}} Left Content#Lorem markdownum insigne. Olympo signis Delphis! Retexi Nereius nova develat stringit, frustra Saturnius uteroque inter! Oculis non ritibus Telethusa protulit, sed sed aere valvis inhaesuro Pallas animam: qui quid, ignes. Miseratus fonte Ditis conubia.'><meta property="og:locale" content="en_us"><meta property="og:type" content="article"><meta property="article:section" content="docs"><meta itemprop=name content="My New Hugo Site"><meta itemprop=description content='Columns#Columns help organize shorter pieces of content horizontally for readability. columns shortcode styles markdown list as up to 3 columns.
-Example#{{% columns [ratio="1:1"] [class="..."] %}} - ### Left Content Lorem markdownum insigne... - ### Mid Content Lorem markdownum insigne... - ### Right Content Lorem markdownum insigne... {{% /columns %}} Left Content#Lorem markdownum insigne. Olympo signis Delphis! Retexi Nereius nova develat stringit, frustra Saturnius uteroque inter! Oculis non ritibus Telethusa protulit, sed sed aere valvis inhaesuro Pallas animam: qui quid, ignes. Miseratus fonte Ditis conubia.'><meta itemprop=wordCount content="253"><title>Columns | My New Hugo Site</title><link rel=icon href=/favicon.png><link rel=manifest href=/manifest.json><link rel=canonical href=http://localhost:1313/docs/shortcodes/columns/><link rel=stylesheet href=/book.min.cc2c524ed250aac81b23d1f4af87344917b325208841feca0968fe450f570575.css integrity="sha256-zCxSTtJQqsgbI9H0r4c0SRezJSCIQf7KCWj+RQ9XBXU=" crossorigin=anonymous><script defer src=/fuse.min.js></script><script defer src=/en.search.min.c00562bcf39dff3c1254e41626033bb7481f1c65a50d208fce9d9891f10968d9.js integrity="sha256-wAVivPOd/zwSVOQWJgM7t0gfHGWlDSCPzp2YkfEJaNk=" crossorigin=anonymous></script></head><body dir=ltr class="book-kind-page book-type-docs"><input type=checkbox class="hidden toggle" id=menu-control>
-<input type=checkbox class="hidden toggle" id=toc-control><main class="container flex"><aside class=book-menu><div class=book-menu-content><nav><h2 class=book-brand><a class="flex align-center" href=/><span>My New Hugo Site</span></a></h2><div class="book-search hidden"><input id=book-search-input type=text placeholder=Search aria-label=Search maxlength=64 data-hotkeys=s/><div class="book-search-spinner hidden"></div><ul id=book-search-results></ul></div><script>document.querySelector(".book-search").classList.remove("hidden")</script><ul><li class=book-section-flat><a href=/docs/example/>Example Site</a><ul><li><a href=/docs/example/table-of-contents/>Table of Contents</a><ul><li><a href=/docs/example/table-of-contents/with-toc/>With ToC</a></li><li><a href=/docs/example/table-of-contents/without-toc/>Without ToC</a></li></ul></li><li><input type=checkbox id=section-9b78f0d8636334cdfa950da0c37cd9b9 class=toggle>
-<label for=section-9b78f0d8636334cdfa950da0c37cd9b9 class=flex><a role=button>Collapsed</a>
-<img src=/icons/chevron-right.svg class=book-icon alt=Expand></label><ul><li><a href=/docs/example/collapsed/3rd-level/>3rd Level</a><ul><li><a href=/docs/example/collapsed/3rd-level/4th-level/>4th Level</a></li></ul></li></ul></li></ul></li><li class=book-section-flat><a>Shortcodes</a><ul><li><a href=/docs/shortcodes/buttons/>Buttons</a></li><li><a href=/docs/shortcodes/columns/ class=active>Columns</a></li><li><a href=/docs/shortcodes/details/>Details</a></li><li><input type=checkbox id=section-fcf905a260efe6a5f6ecb955aa4e9d47 class=toggle>
-<label for=section-fcf905a260efe6a5f6ecb955aa4e9d47 class=flex><a role=button>Experimental</a>
-<img src=/icons/chevron-right.svg class=book-icon alt=Expand></label><ul><li><a href=/docs/shortcodes/experimental/asciinema/>Asciinema</a></li><li><a href=/docs/shortcodes/experimental/badges/>Badges</a></li><li><a href=/docs/shortcodes/experimental/cards/>Cards</a></li><li><a href=/docs/shortcodes/experimental/images/>Images</a></li></ul></li><li><a href=/docs/shortcodes/hints/>Hints</a></li><li><a href=/docs/shortcodes/mermaid/>Mermaid</a></li><li><a href=/docs/shortcodes/steps/>Steps</a></li><li><a href=/docs/shortcodes/tabs/>Tabs</a></li><li><a href=/docs/shortcodes/katex/>KaTeX</a></li></ul></li></ul><ul><li><a href=/posts/ title=Blog>Blog</a></li></ul></nav><script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script></div></aside><div class=book-page><header class="book-header hidden"><div class="flex align-center justify-between"><label for=menu-control><img src=/icons/menu.svg class=book-icon alt=Menu></label><h3>Columns</h3><label for=toc-control><img src=/icons/toc.svg class=book-icon alt="Table of Contents"></label></div><aside class=hidden><nav id=TableOfContents><ul><li><a href=#example>Example</a><ul><li><a href=#left-content>Left Content</a></li><li><a href=#mid-content>Mid Content</a></li><li><a href=#right-content>Right Content</a></li></ul></li><li><a href=#settings-size-ratio-for-columns>Settings size ratio for columns</a><ul><li><a href=#x1-column>x1 Column</a></li><li><a href=#x2-column>x2 Column</a></li></ul></li></ul></nav></aside></header><article class="markdown book-article"><h1 id=columns>Columns<a class=anchor href=#columns>#</a></h1><p>Columns help organize shorter pieces of content horizontally for readability. <code>columns</code> shortcode styles markdown list as up to 3 columns.</p><h2 id=example>Example<a class=anchor href=#example>#</a></h2><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-tpl data-lang=tpl><span style=display:flex><span><span style=color:#75715e>{{</span><span style=color:#f92672>%</span> <span style=color:#a6e22e>columns</span> <span style=color:#f92672>[</span><span style=color:#a6e22e>ratio</span><span style=color:#f92672>=</span><span style=color:#e6db74>&#34;1:1&#34;</span><span style=color:#f92672>]</span> <span style=color:#f92672>[</span><span style=color:#a6e22e>class</span><span style=color:#f92672>=</span><span style=color:#e6db74>&#34;...&#34;</span><span style=color:#f92672>]</span> <span style=color:#f92672>%</span><span style=color:#75715e>}}</span>
-</span></span><span style=display:flex><span>- ### Left Content
-</span></span><span style=display:flex><span>  Lorem markdownum insigne...
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>- ### Mid Content
-</span></span><span style=display:flex><span>  Lorem markdownum insigne...
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>- ### Right Content
-</span></span><span style=display:flex><span>  Lorem markdownum insigne...
-</span></span><span style=display:flex><span><span style=color:#75715e>{{</span><span style=color:#f92672>%</span> <span style=color:#f92672>/</span><span style=color:#a6e22e>columns</span> <span style=color:#f92672>%</span><span style=color:#75715e>}}</span></span></span></code></pre></div><ul><li><h3 id=left-content>Left Content<a class=anchor href=#left-content>#</a></h3><p>Lorem markdownum insigne. Olympo signis Delphis! Retexi Nereius nova develat
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Columns#Columns help organize shorter pieces of content horizontally for readability. columns shortcode styles markdown list as up to 3 columns.
+Example#{{% columns [ratio=&#34;1:1&#34;] [class=&#34;...&#34;] %}} - ### Left Content Lorem markdownum insigne... - ### Mid Content Lorem markdownum insigne... - ### Right Content Lorem markdownum insigne... {{% /columns %}} Left Content#Lorem markdownum insigne. Olympo signis Delphis! Retexi Nereius nova develat stringit, frustra Saturnius uteroque inter! Oculis non ritibus Telethusa protulit, sed sed aere valvis inhaesuro Pallas animam: qui quid, ignes. Miseratus fonte Ditis conubia.
+">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#343a40">
+<meta name="color-scheme" content="light dark"><meta property="og:url" content="http://localhost:1313/docs/shortcodes/columns/">
+  <meta property="og:site_name" content="My New Hugo Site">
+  <meta property="og:title" content="My New Hugo Site">
+  <meta property="og:description" content="Columns#Columns help organize shorter pieces of content horizontally for readability. columns shortcode styles markdown list as up to 3 columns.
+Example#{{% columns [ratio=&#34;1:1&#34;] [class=&#34;...&#34;] %}} - ### Left Content Lorem markdownum insigne... - ### Mid Content Lorem markdownum insigne... - ### Right Content Lorem markdownum insigne... {{% /columns %}} Left Content#Lorem markdownum insigne. Olympo signis Delphis! Retexi Nereius nova develat stringit, frustra Saturnius uteroque inter! Oculis non ritibus Telethusa protulit, sed sed aere valvis inhaesuro Pallas animam: qui quid, ignes. Miseratus fonte Ditis conubia.">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="docs">
+
+
+  <meta itemprop="name" content="My New Hugo Site">
+  <meta itemprop="description" content="Columns#Columns help organize shorter pieces of content horizontally for readability. columns shortcode styles markdown list as up to 3 columns.
+Example#{{% columns [ratio=&#34;1:1&#34;] [class=&#34;...&#34;] %}} - ### Left Content Lorem markdownum insigne... - ### Mid Content Lorem markdownum insigne... - ### Right Content Lorem markdownum insigne... {{% /columns %}} Left Content#Lorem markdownum insigne. Olympo signis Delphis! Retexi Nereius nova develat stringit, frustra Saturnius uteroque inter! Oculis non ritibus Telethusa protulit, sed sed aere valvis inhaesuro Pallas animam: qui quid, ignes. Miseratus fonte Ditis conubia.">
+  <meta itemprop="wordCount" content="253">
+
+<title>Columns | My New Hugo Site</title>
+<link rel="icon" href="/favicon.png" >
+<link rel="manifest" href="/manifest.json">
+<link rel="canonical" href="http://localhost:1313/docs/shortcodes/columns/">
+<link rel="stylesheet" href="/book.min.cc2c524ed250aac81b23d1f4af87344917b325208841feca0968fe450f570575.css" integrity="sha256-zCxSTtJQqsgbI9H0r4c0SRezJSCIQf7KCWj&#43;RQ9XBXU=" crossorigin="anonymous">
+
+
+  <script defer src="/fuse.min.js"></script>
+  <script defer src="/en.search.min.6781389e0f4272ee52758eb2649f8545950ab83aa711fcb1b89b3d5eb8252c68.js" integrity="sha256-Z4E4ng9Ccu5SdY6yZJ&#43;FRZUKuDqnEfyxuJs9XrglLGg=" crossorigin="anonymous"></script>
+
+
+
+  
+</head>
+<body dir="ltr" class="book-kind-page book-type-docs">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    
+<aside class="book-menu">
+  <div class="book-menu-content">
+    
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="/"><span>My New Hugo Site</span>
+  </a>
+</h2>
+
+
+<div class="book-search hidden">
+  <input id="book-search-input" type="text" 
+    placeholder="Search"
+    aria-label="Search"
+    maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+<script>document.querySelector(".book-search").classList.remove("hidden")</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/my2026/2do/" class="">
+      2do</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a>
+      328考核</a>
+  
+
+          
+  <ul>
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/my2026/2do/%E6%B8%B8%E6%88%8F%E5%BC%80%E5%8F%91%E8%BD%AC%E8%81%8C%E8%AE%A1%E5%88%92/%E6%80%BB%E8%A7%88/" class="">
+      总览</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/my2026/2do/%E6%B8%B8%E6%88%8F%E5%BC%80%E5%8F%91%E8%BD%AC%E8%81%8C%E8%AE%A1%E5%88%92/%E8%83%BD%E5%8A%9B%E8%8A%82%E7%82%B9/" class="">
+      能力节点</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/my2026/2lab/" class="">
+      2lab</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/my2026/2read/" class="">
+      2read</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+<ul><li><a href="/posts/" title="Blog">Blog</a></li></ul>
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+
+  </div>
+</aside>
+ 
+
+    <div class="book-page">
+      <header class="book-header hidden">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/icons/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <h3>Columns</h3>
+
+  <label for="toc-control">
+    
+    <img src="/icons/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden">
+    
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#example">Example</a>
+      <ul>
+        <li><a href="#left-content">Left Content</a></li>
+        <li><a href="#mid-content">Mid Content</a></li>
+        <li><a href="#right-content">Right Content</a></li>
+      </ul>
+    </li>
+    <li><a href="#settings-size-ratio-for-columns">Settings size ratio for columns</a>
+      <ul>
+        <li><a href="#x1-column">x1 Column</a></li>
+        <li><a href="#x2-column">x2 Column</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown book-article"><h1 id="columns">Columns<a class="anchor" href="#columns">#</a></h1>
+<p>Columns help organize shorter pieces of content horizontally for readability. <code>columns</code> shortcode styles markdown list as up to 3 columns.</p>
+<h2 id="example">Example<a class="anchor" href="#example">#</a></h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-tpl" data-lang="tpl"><span style="display:flex;"><span><span style="color:#75715e">{{</span><span style="color:#f92672">%</span> <span style="color:#a6e22e">columns</span> <span style="color:#f92672">[</span><span style="color:#a6e22e">ratio</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;1:1&#34;</span><span style="color:#f92672">]</span> <span style="color:#f92672">[</span><span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;...&#34;</span><span style="color:#f92672">]</span> <span style="color:#f92672">%</span><span style="color:#75715e">}}</span>
+</span></span><span style="display:flex;"><span>- ### Left Content
+</span></span><span style="display:flex;"><span>  Lorem markdownum insigne...
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>- ### Mid Content
+</span></span><span style="display:flex;"><span>  Lorem markdownum insigne...
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>- ### Right Content
+</span></span><span style="display:flex;"><span>  Lorem markdownum insigne...
+</span></span><span style="display:flex;"><span><span style="color:#75715e">{{</span><span style="color:#f92672">%</span> <span style="color:#f92672">/</span><span style="color:#a6e22e">columns</span> <span style="color:#f92672">%</span><span style="color:#75715e">}}</span></span></span></code></pre></div><!-- raw HTML omitted -->
+<ul>
+<li>
+<h3 id="left-content">Left Content<a class="anchor" href="#left-content">#</a></h3>
+<p>Lorem markdownum insigne. Olympo signis Delphis! Retexi Nereius nova develat
 stringit, frustra Saturnius uteroque inter! Oculis non ritibus Telethusa
 protulit, sed sed aere valvis inhaesuro Pallas animam: qui <em>quid</em>, ignes.
-Miseratus fonte Ditis conubia.</p></li><li><h3 id=mid-content>Mid Content<a class=anchor href=#mid-content>#</a></h3><p>Lorem markdownum insigne. Olympo signis Delphis! Retexi Nereius nova develat
-stringit, frustra Saturnius uteroque inter!</p></li><li><h3 id=right-content>Right Content<a class=anchor href=#right-content>#</a></h3><p>Lorem markdownum insigne. Olympo signis Delphis! Retexi Nereius nova develat
+Miseratus fonte Ditis conubia.</p>
+</li>
+<li>
+<h3 id="mid-content">Mid Content<a class="anchor" href="#mid-content">#</a></h3>
+<p>Lorem markdownum insigne. Olympo signis Delphis! Retexi Nereius nova develat
+stringit, frustra Saturnius uteroque inter!</p>
+</li>
+<li>
+<h3 id="right-content">Right Content<a class="anchor" href="#right-content">#</a></h3>
+<p>Lorem markdownum insigne. Olympo signis Delphis! Retexi Nereius nova develat
 stringit, frustra Saturnius uteroque inter! Oculis non ritibus Telethusa
 protulit, sed sed aere valvis inhaesuro Pallas animam: qui <em>quid</em>, ignes.
-Miseratus fonte Ditis conubia.</p></li></ul><h2 id=settings-size-ratio-for-columns>Settings size ratio for columns<a class=anchor href=#settings-size-ratio-for-columns>#</a></h2><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-tpl data-lang=tpl><span style=display:flex><span><span style=color:#75715e>{{</span><span style=color:#f92672>%</span> <span style=color:#a6e22e>columns</span> <span style=color:#a6e22e>ratio</span><span style=color:#f92672>=</span><span style=color:#e6db74>&#34;1:2&#34;</span> <span style=color:#f92672>%</span><span style=color:#75715e>}}</span>
-</span></span><span style=display:flex><span>- ## x1 Column
-</span></span><span style=display:flex><span>  Lorem markdownum insigne...
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>- ## x2 Column
-</span></span><span style=display:flex><span>  Lorem markdownum insigne...
-</span></span><span style=display:flex><span><span style=color:#75715e>{{</span><span style=color:#f92672>%</span> <span style=color:#f92672>/</span><span style=color:#a6e22e>columns</span> <span style=color:#f92672>%</span><span style=color:#75715e>}}</span></span></span></code></pre></div><ul><li><h3 id=x1-column>x1 Column<a class=anchor href=#x1-column>#</a></h3><p>Lorem markdownum insigne. Olympo signis Delphis! Retexi Nereius nova develat
+Miseratus fonte Ditis conubia.</p>
+</li>
+</ul>
+<!-- raw HTML omitted -->
+<h2 id="settings-size-ratio-for-columns">Settings size ratio for columns<a class="anchor" href="#settings-size-ratio-for-columns">#</a></h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-tpl" data-lang="tpl"><span style="display:flex;"><span><span style="color:#75715e">{{</span><span style="color:#f92672">%</span> <span style="color:#a6e22e">columns</span> <span style="color:#a6e22e">ratio</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;1:2&#34;</span> <span style="color:#f92672">%</span><span style="color:#75715e">}}</span>
+</span></span><span style="display:flex;"><span>- ## x1 Column
+</span></span><span style="display:flex;"><span>  Lorem markdownum insigne...
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>- ## x2 Column
+</span></span><span style="display:flex;"><span>  Lorem markdownum insigne...
+</span></span><span style="display:flex;"><span><span style="color:#75715e">{{</span><span style="color:#f92672">%</span> <span style="color:#f92672">/</span><span style="color:#a6e22e">columns</span> <span style="color:#f92672">%</span><span style="color:#75715e">}}</span></span></span></code></pre></div><!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<ul>
+<li>
+<h3 id="x1-column">x1 Column<a class="anchor" href="#x1-column">#</a></h3>
+<p>Lorem markdownum insigne. Olympo signis Delphis! Retexi Nereius nova develat
 stringit, frustra Saturnius uteroque inter! Oculis non ritibus Telethusa
 protulit, sed sed aere valvis inhaesuro Pallas animam: qui <em>quid</em>, ignes.
-Miseratus fonte Ditis conubia.</p></li><li><h3 id=x2-column>x2 Column<a class=anchor href=#x2-column>#</a></h3><p>Lorem markdownum insigne. Olympo signis Delphis! Retexi Nereius nova develat
-stringit, frustra Saturnius uteroque inter!</p><p>Lorem markdownum insigne. Olympo signis Delphis! Retexi Nereius nova develat
+Miseratus fonte Ditis conubia.</p>
+</li>
+<li>
+<h3 id="x2-column">x2 Column<a class="anchor" href="#x2-column">#</a></h3>
+<p>Lorem markdownum insigne. Olympo signis Delphis! Retexi Nereius nova develat
+stringit, frustra Saturnius uteroque inter!</p>
+<p>Lorem markdownum insigne. Olympo signis Delphis! Retexi Nereius nova develat
 stringit, frustra Saturnius uteroque inter! Oculis non ritibus Telethusa
 protulit, sed sed aere valvis inhaesuro Pallas animam: qui <em>quid</em>, ignes.
-Miseratus fonte Ditis conubia.</p></li></ul></article><footer class=book-footer><div class="flex flex-wrap justify-between"><div></div><div></div></div><div class="flex flex-wrap justify-between"><span><a href=/docs/shortcodes/buttons/ class="flex align-center"><img src=/icons/backward.svg class=book-icon alt=Backward>
-<span>Buttons</span>
-</a></span><span><a href=/docs/shortcodes/details/ class="flex align-center"><span>Details</span>
-<img src=/icons/forward.svg class=book-icon alt=Forward></a></span></div><div class=book-comments></div><script>(function(){document.querySelectorAll("pre:has(code)").forEach(e=>{e.addEventListener("click",e.focus),e.addEventListener("copy",function(t){if(t.preventDefault(),navigator.clipboard){const t=window.getSelection().toString()||e.textContent;navigator.clipboard.writeText(t)}})})})()</script></footer><label for=menu-control class="hidden book-menu-overlay"></label></div><aside class=book-toc><div class=book-toc-content><nav id=TableOfContents><ul><li><a href=#example>Example</a><ul><li><a href=#left-content>Left Content</a></li><li><a href=#mid-content>Mid Content</a></li><li><a href=#right-content>Right Content</a></li></ul></li><li><a href=#settings-size-ratio-for-columns>Settings size ratio for columns</a><ul><li><a href=#x1-column>x1 Column</a></li><li><a href=#x2-column>x2 Column</a></li></ul></li></ul></nav></div></aside></main></body></html>
+Miseratus fonte Ditis conubia.</p>
+</li>
+</ul>
+<!-- raw HTML omitted -->
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+<div>
+
+</div>
+
+<div>
+
+</div>
+
+</div>
+
+
+
+
+
+  
+  
+  
+
+
+ 
+        
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+        
+        
+  
+ 
+        
+  
+  
+    <script>(function(){document.querySelectorAll("pre:has(code)").forEach(e=>{e.addEventListener("click",e.focus),e.addEventListener("copy",function(t){if(t.preventDefault(),navigator.clipboard){const t=window.getSelection().toString()||e.textContent;navigator.clipboard.writeText(t)}})})})()</script>
+  
+
+      </footer>
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+  
+  <aside class="book-toc">
+    <div class="book-toc-content">
+      
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#example">Example</a>
+      <ul>
+        <li><a href="#left-content">Left Content</a></li>
+        <li><a href="#mid-content">Mid Content</a></li>
+        <li><a href="#right-content">Right Content</a></li>
+      </ul>
+    </li>
+    <li><a href="#settings-size-ratio-for-columns">Settings size ratio for columns</a>
+      <ul>
+        <li><a href="#x1-column">x1 Column</a></li>
+        <li><a href="#x2-column">x2 Column</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+    </div>
+  </aside>
+  
+ 
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -8,17 +8,13 @@ baseURL = 'https://zimang.fun/my2026'
 title = 'Zimang Book'
 theme = 'hugo-book'
 
-# Book configuration
-disablePathToLower = true
-enableGitInfo = true
 
+
+enableGitInfo = true
+BookLastChangeLink = '{{ .Site.Params.BookRepo }}/commit/{{ .GitInfo.Hash }}'
+BookDateFormat = 'January 2, 2006'
 
 [params]
   # (Optional, default docs) Specify section of content to render as menu
   # You can also set value to "*" to render all sections to menu
   BookSection = 'my2026'
-
-  # (Optional, default none) Set template for commit link for the page. Requires enableGitInfo.
-  # When set enabled 'Last Modified' and a link to the commit in the footer of the page.
-  # Param is executed as template using .Site, .Page and .GitInfo as context.
-  BookLastChangeLink = 'https://github.com/Zimang/zimang.github.io/commit/{{ .GitInfo.Hash }}'
