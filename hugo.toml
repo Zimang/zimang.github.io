@@ -10,3 +10,4 @@ BookDateFormat = 'January 2, 2006'
   # You can also set value to "*" to render all sections to menu
   BookSection = 'my2026'
   BookLastChangeLink = '{{ .Site.Params.BookRepo }}/commit/{{ .GitInfo.Hash }}'
+  BookRepo = 'https://github.com/Zimang/zimang.github.io/'
