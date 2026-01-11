@@ -4,43 +4,21 @@ bookFlatSection: false
 title: "2read"
 ---
 
-# Week One
+# Book list One  
 
-## Planes
+1. 主要是Unity，C#相关内容
+2. 其次是An
 
-### plane A
+## GameDev Trans
 
-1. 6月份离职，9月份十月份稳定下来脱产开发
-2. 10~12复盘总结
+- [ ] Unity Game Development Cookbook Essentials for Every Game
+- [ ] 3D Game Development with Unity
 
-5w左右的开发资金根本不够用
+![image-20260111183407541](https://ddd-1313653702.cos.ap-guangzhou.myqcloud.com/now/20260111183407569.png)
 
-风险高，稳定不下来
+![image-20260111195602044](https://ddd-1313653702.cos.ap-guangzhou.myqcloud.com/now/20260111195602076.png)
 
-好不容易存点钱霍霍没了又得立马找份工作
-
-心理压力大动作变形
-
-
-
-### plane B
-
-1. 11月离职，到27年稳定下来脱产开发
-2. 2~4月份跳槽游戏开发岗或者安卓开发岗
-
-能够满足10w存款心愿，此外中途可能会有加薪
-
-时间长度过长，容易半途而废
-
-风险较低
+## Source Code Lists
 
 
 
-
-
-## 关键节点
-
-3.28
-
-1. 检验转职要求
-2. 

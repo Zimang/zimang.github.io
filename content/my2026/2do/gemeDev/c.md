@@ -4,7 +4,6 @@ bookFlatSection: false
 title: "能力节点"
 ---
 
-GitInfo: {{ printf "%#v" .GitInfo }}
 # 基础工程能力
 
 | 模块     | 具体能力             | 验收标准（C1）                 | 为什么要验           |
@@ -21,12 +20,14 @@ GitInfo: {{ printf "%#v" .GitInfo }}
 
 现有资源
 
-- [ ] C# Concurrency
-- [ ] 
+- [ ] C# 
+  - [ ] 一本C#基础
+  - [ ] 一本C# 并发即可
 
 
 
-{{ .GitInfo }}
+
+
 
 
 
@@ -41,6 +42,10 @@ GitInfo: {{ printf "%#v" .GitInfo }}
 | 状态管理         | 简单状态机      | 移动 / 战斗 / 对话  | RPG 必备   |
 
 
+
+- [ ] Unity
+  - [ ] 动手实践cookbook一本
+  - [ ] 特殊风味包多本
 
 
 
