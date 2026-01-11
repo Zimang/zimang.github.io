@@ -2,3 +2,16 @@
 [module.hugoVersion]
   extended = true
   min = "0.146.0"
+
+
+
+
+[params]
+  # (Optional, default docs) Specify section of content to render as menu
+  # You can also set value to "*" to render all sections to menu
+  BookSection = 'my2026'
+
+  # (Optional, default none) Set template for commit link for the page. Requires enableGitInfo.
+  # When set enabled 'Last Modified' and a link to the commit in the footer of the page.
+  # Param is executed as template using .Site, .Page and .GitInfo as context.
+  BookLastChangeLink = 'https://github.com/Zimang/zimang.github.io/commit/{{ .GitInfo.Hash }}'
