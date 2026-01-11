@@ -10,6 +10,7 @@ title: "2do"
 
 ### plane A
 
+GitInfo: {{ printf "%#v" .GitInfo }}
 1. 6月份离职，9月份十月份稳定下来脱产开发
 2. 10~12复盘总结
 

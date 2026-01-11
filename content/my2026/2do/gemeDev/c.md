@@ -4,6 +4,7 @@ bookFlatSection: false
 title: "能力节点"
 ---
 
+GitInfo: {{ printf "%#v" .GitInfo }}
 # 基础工程能力
 
 | 模块     | 具体能力             | 验收标准（C1）                 | 为什么要验           |
