@@ -18,6 +18,33 @@ title: "2read"
 
 ![image-20260111195602044](https://ddd-1313653702.cos.ap-guangzhou.myqcloud.com/now/20260111195602076.png)
 
+
+
+##  C#
+
+- [ ] C# in Depth
+- [ ] C# Cookbook
+- [ ] Code like a Pro in C#
+- [ ] C# Concurrency
+
+<img src="https://ddd-1313653702.cos.ap-guangzhou.myqcloud.com/now/20260111210144956.png" alt="image-20260111210144895" style="zoom: 25%;" />
+
+<img src="https://ddd-1313653702.cos.ap-guangzhou.myqcloud.com/now/20260111210221028.png" alt="image-20260111210220955" style="zoom:25%;" />
+
+<img src="https://ddd-1313653702.cos.ap-guangzhou.myqcloud.com/now/20260111210240348.png" alt="image-20260111210240325" style="zoom:50%;" />
+
+![image-20260111210327233](https://ddd-1313653702.cos.ap-guangzhou.myqcloud.com/now/20260111210327265.png)
+
+
+
+
+
+
+
+
+
+
+
 ## Source Code Lists
 
 
