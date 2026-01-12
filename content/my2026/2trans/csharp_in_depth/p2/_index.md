@@ -1,8 +1,11 @@
 ---
-​---
-title: "P2 Csharp 2-5"
-​---
+weight: 1
+title: "p2 c# 2~5"
 ---
+
+
+
+
 
 p2 (随 Visual Studio 2005 发布）涵盖了 C# 2 至 C# 5（随 Visual Studio 2012 发布）之间引入的所有特性。
 
