@@ -1,5 +1,5 @@
 ---
-weight: 
+weight: 1
 title: "C#中的协变与逆变：数组协变性"
 ---
 
