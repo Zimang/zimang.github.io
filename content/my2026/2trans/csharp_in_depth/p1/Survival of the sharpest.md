@@ -95,5 +95,75 @@ Console.WriteLine(book.title);
 
 **C# 新特性的一个反复出现的主题，就是让你能够用越来越简洁的方式表达你的想法。**类型系统是其中的一部分，正如你在匿名类型中所见，但还有许多其他特性也对此有所贡献。你可能会听到很多相关的说法，尤其是关于新特性如何让你省去许多冗余代码。C# 的这些特性让你减少繁琐的仪式感，去除样板代码，避免冗余。这些说法其实都是在描述同一个效果。并不是说那些现在看来多余的代码本身有错，只是它们显得分散注意力且不必要。接下来，我们来看几个 C# 在这方面演进的例子。  
 
-构造与初始化  
+#### 构造与初始化  
+
 首先，我们来看看如何创建和初始化对象。委托可能是演变最多且经历多个阶段的部分。在 C# 1 中，你必须为委托引用的方法单独写一个方法，然后以冗长的方式创建委托本身。举个例子，下面是在 C# 1 中为按钮的 Click 事件订阅一个新的事件处理器时所写的代码：
+
+```c#
+button.Click += new EventHandler(HandleButtonClick);  //C# 1
+```
+
+C# 2 引入了**方法组转换**和**匿名方法**。如果你想保留 `HandleButtonClick` 方法，那么方法组转换允许你将之前的代码改为：
+
+```c#
+button.Click += HandleButtonClick;  // C# 2
+```
+
+如果你的点击事件处理逻辑很简单，可能根本不需要单独定义一个方法，而是使用**匿名方法**：
+
+```c#
+button.Click += delegate { MessageBox.Show("Clicked!"); }; // C# 2
+```
+
+匿名方法还有一个额外优势，即可以充当**闭包**：它们能够使用其创建上下文中的局部变量。然而，在现代C#代码中，匿名方法并不常用，因为C# 3为我们提供了**Lambda表达式**。Lambda表达式几乎拥有匿名方法的所有优点，且语法更为简洁：
+
+```c#
+button.Click += (sender, args) => MessageBox.Show("Clicked!"); // C# 3
+```
+
+**注意**：此例中，Lambda表达式比匿名方法更长，因为匿名方法用到了一个Lambda表达式所不具备的特性：**通过不提供参数列表来完全忽略参数**。
+
+> 从C# 1的显式委托实例化，到C# 2的匿名方法，再到C# 3的Lambda表达式。每一次演进都让代码更聚焦于逻辑本身，而非语法结构。
+>
+> 匿名方法与Lambda表达式在大多数情况下可互换，但存在一个**微妙而重要的区别**：匿名方法可以完全省略参数列表（使用 `delegate { ... }`），这意味着你可以在其中完全不使用事件参数；而Lambda表达式即使不使用参数，也必须显式声明参数列表（如 `(sender, args) =>`）。这在处理某些不需要参数的事件时，匿名方法能写出更短、意图更明确的代码。
+
+我之所以用事件处理程序作为委托的示例，是因为在 C# 1 中这是它们的主要用途。在 C# 的后续版本中，委托被应用于更多样化的场景，尤其是在 **LINQ** 中。
+
+LINQ 还通过**对象初始化器**和**集合初始化器**的形式，为对象初始化带来了其他好处。它们允许你在单个表达式内，指定要设置的新对象的一组属性，或要添加到新集合中的一组项。这用代码演示比描述更简单，我将借用第 3 章的一个例子。考虑一下你以前可能这样写的代码：
+
+```c#
+var customer = new Customer();
+customer.Name = "Jon";
+customer.Address = "UK";
+
+var item1 = new OrderItem();
+item1.ItemId = "abcd123";
+item1.Quantity = 1;
+
+var item2 = new OrderItem();
+item2.ItemId = "fghi456";
+item2.Quantity = 2;
+
+var order = new Order();
+order.OrderId = "xyz";
+order.Customer = customer;
+order.Items.Add(item1);
+order.Items.Add(item2);
+```
+
+而 C# 3 引入的对象初始化器和集合初始化器让这一切清晰得多：
+
+```c#
+var order = new Order
+{
+    OrderId = "xyz",
+    Customer = new Customer { Name = "Jon", Address = "UK" },
+    Items =
+    {
+        new OrderItem { ItemId = "abcd123", Quantity = 1 },
+        new OrderItem { ItemId = "fghi456", Quantity = 2 }
+    }
+};
+```
+
+我并非建议您详细阅读这两个例子；重要的是第二种形式相对于第一种的**简洁性**。
