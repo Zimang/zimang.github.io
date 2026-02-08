@@ -552,3 +552,455 @@ namespace System
 我不会解释代码细节，因为每个成员都很简单。唯一可能需要稍作解释的是 `Invariant` 方法调用 `formattable?.ToString(CultureInfo.InvariantCulture)`。此表达式的 `?.` 部分是空条件运算符，您将在 10.3 节更详细地了解。
 
 现在您了解了内插字符串字面量能做的一切，但应如何使用它们呢？
+
+
+
+
+
+# **使用指南和限制**
+
+与表达式主体成员类似，内插字符串字面量是一个可以安全尝试的特性。您可以调整代码以满足自己（或团队）的标准。如果您稍后改变主意想回到旧代码，这样做很简单。除非您开始在 API 中使用 `FormattableString`，否则内插字符串字面量的使用是隐藏的实现细节。当然，这并不意味着应该到处使用它们。在本节中，我们将讨论在哪些情况下使用内插字符串字面量有意义，哪些情况下没有意义，以及您可能发现即使想用也无法使用的情况。
+
+## **开发者和机器，但不一定是最终用户**
+
+首先，好消息：几乎任何您已经在使用硬编码组合格式字符串或普通字符串连接的地方，都可以使用内插字符串。大多数情况下，代码会变得更易读。
+
+这里的硬编码部分很重要。内插字符串字面量不是动态的。组合格式字符串在您的源代码中；编译器只是稍作修改以使用常规格式项。当您事先知道所需文本和格式时，这很好，但不够灵活。
+
+对字符串分类的一种方法是考虑谁或什么将使用它们。在本节中，我将考虑三种使用者：
+* 供其他代码解析的字符串
+* 给其他开发者的消息
+* 给最终用户的消息
+
+让我们依次看看每种字符串，思考内插字符串字面量是否有用。
+
+### **机器可读字符串**
+
+许多代码是为了读取其他字符串而构建的。有机器可读的日志格式、URL查询参数和基于文本的数据格式，如 XML、JSON 或 YAML。所有这些都有固定格式，任何值都应使用固定文化进行格式化。正如您所见，如果您需要自己执行格式化，这是使用 `FormattableString` 的好地方。提醒一下，无论如何，您通常应该利用适当的 API 来格式化机器可读字符串。
+
+请记住，这些字符串中的每一个也可能包含针对人类的嵌套字符串；日志文件的每一行可能以特定方式格式化，以便将其视为单个记录，但其消息部分可能是针对其他开发者的。您需要跟踪代码的每个部分在哪个嵌套级别上工作。
+
+### **给其他开发者的消息**
+
+如果您查看大型代码库，可能会发现许多字符串字面量是针对其他开发者的，无论是同一公司的同事还是使用您发布的 API 的开发者。这些主要包括：
+* 工具字符串，如控制台应用程序中的帮助消息
+* 写入日志或控制台的诊断或进度消息
+* 异常消息
+
+根据我的经验，这些通常是英文的。尽管包括微软在内的一些公司会费力地本地化他们的错误消息，但大多数公司不会。本地化在数据翻译和正确使用代码方面都有显著成本。如果您知道您的受众至少能比较舒服地阅读英文，特别是如果他们可能想在 Stack Overflow 等英文网站上分享消息，那么通常不值得费力本地化这些字符串。
+
+但是，是否确保文本中的值都以固定文化格式化则是另一回事。这肯定有助于提高一致性，但我怀疑我不是唯一一个没有尽可能注意这一点的开发者。然而，我鼓励您对日期使用非歧义格式。ISO 格式 `yyyy-MM-dd` 易于理解，并且没有 `dd/MM/yyyy` 或 `MM/dd/yyyy` 的"月份优先还是日期优先？"问题。如前所述，文化可能会影响产生的数字，因为世界不同地区使用不同的日历系统。请仔细考虑是否要使用固定文化来强制使用公历。例如，为无效参数抛出异常的代码可能如下所示：
+
+```csharp
+throw new ArgumentException(Invariant(
+    $"Start date {start:yyyy-MM-dd} should not be earlier than year 2000."));
+```
+
+如果您知道所有阅读这些字符串的开发者都将处于相同的非英语文化中，那么完全可以用该文化编写所有消息。
+
+### **给最终用户的消息**
+
+最后，几乎所有的应用程序都至少有一些显示给最终用户的文本。与开发者一样，您需要了解每个用户的期望，以便做出正确的文本呈现决策。在某些情况下，您可以确信所有最终用户都乐于使用单一文化。这通常适用于您为企业或基于一个位置的其他组织内部构建的应用程序。这里您更可能使用当地文化而不是英语，但您不需要担心两个用户希望以不同方式查看相同信息。
+
+到目前为止，所有这些情况都适合使用内插字符串字面量。我特别喜欢将它们用于异常消息。它们让我可以编写简洁的代码，同时为不幸的开发者提供有用的上下文，他们正在仔细查看日志并试图找出这次出了什么问题。
+
+但是，当您有多种文化的最终用户时，内插字符串字面量很少有帮助，如果您不进行本地化，它们可能会损害您的产品。在这里，格式字符串很可能在资源文件中，而不是在您的代码中，因此您甚至不太可能看到使用内插字符串字面量的可能性。偶尔会有例外，例如当您只格式化一个信息片段以放入特定的 HTML 标签或类似内容时。在这些特殊情况下，内插字符串字面量应该没问题，但不要期望经常使用它们。
+
+您已经看到不能将内插字符串字面量用于资源文件。接下来，您将看到该特性根本设计不用于帮助您的其他情况。
+
+## **内插字符串字面量的硬性限制**
+
+每个功能都有其限制，内插字符串字面量也不例外。这些限制有时有变通方法，但在建议您首先不要尝试它们之前，我会向您展示。
+
+#### **无动态格式化**
+
+您已经看到，不能更改构成内插字符串字面量的大部分组合格式字符串。但有一个部分感觉应该是可以动态表达的，但事实并非如此：单个格式字符串。让我们从前面的例子中取一部分：
+
+```csharp
+Console.WriteLine($"Price: {price,9:C}");
+```
+
+这里，我选择了 9 作为对齐，因为我知道我要格式化的值将恰好适合 9 个字符。但是，如果您知道有时您需要格式化的所有值都很小，而有时它们可能很大呢？能够使这个 9 部分动态化会很好，但没有简单的方法可以做到这一点。最接近的方法是使用内插字符串字面量作为 `string.Format` 或等效 `Console.WriteLine` 重载的输入，如下例所示：
+
+```csharp
+int alignment = GetAlignmentFromValues(allTheValues);
+Console.WriteLine($"Price: {{0,{alignment}:C}}", price);
+```
+
+第一组和最后一组大括号在字符串格式中作为转义机制加倍，因为您希望内插字符串字面量的结果是一个像 `"Price: {0,9}"` 这样的字符串，然后使用 `price` 变量来填充格式项。这不是我想编写或阅读的代码。
+
+#### **无表达式重新求值**
+
+编译器总是将内插字符串字面量转换为代码，该代码立即求值格式项中的表达式，并使用它们构建字符串或 `FormattableString`。求值不能延迟或重复。考虑以下清单中的简短示例。它打印相同的值两次，即使开发者可能期望它使用延迟执行。
+
+**清单 9.11 即使 FormattableString 也会急切求值表达式**
+```csharp
+string value = "Before";
+FormattableString formattable = $"Current value: {value}";
+Console.WriteLine(formattable); // 打印"Current value: Before"
+value = "After";
+Console.WriteLine(formattable); // 仍然打印"Current value: Before"
+```
+
+如果您非常需要，可以解决这个问题。如果您将表达式更改为包含捕获值的 lambda 表达式，您可以滥用这一点，在每次格式化时对其求值。尽管 lambda 表达式本身会立即转换为委托，但生成的委托将捕获 `value` 变量，而不是其当前值，并且您可以在每次格式化 `FormattableString` 时强制求值委托。这是一个足够糟糕的想法，因此我不会在这里展示它。
+
+#### **无裸冒号**
+
+尽管您可以在内插字符串字面量中使用几乎任何计算值的表达式，但条件运算符 `?:` 有一个问题：它会混淆编译器，实际上是 C# 语言的语法。除非您小心，否则冒号最终会被处理为表达式和格式字符串之间的分隔符，从而导致编译时错误。例如，这是无效的：
+
+```csharp
+Console.WriteLine($"Adult? {age >= 18 ? "Yes" : "No"}");
+```
+
+通过使用括号括起条件表达式，可以很容易地修复：
+
+```csharp
+Console.WriteLine($"Adult? {(age >= 18 ? "Yes" : "No")}");
+```
+
+我很少发现这是一个问题，部分原因是我通常尽量保持表达式比这更短。我可能首先将是/否值提取到一个单独的字符串变量中。
+
+## **可以使用但真的不应该使用的情况**
+
+编译器不会介意您是否滥用内插字符串字面量，但您的同事可能会。即使可以使用，也有两个主要理由不使用它们。
+
+#### **为可能不使用的字符串延迟格式化**
+
+有时，您想将格式字符串和将要格式化的参数传递给一个可能使用它们也可能不使用方法。例如，如果您有一个前置条件验证方法，您可能希望传入要检查的条件以及仅在条件失败时创建的异常消息的格式和参数。很容易写出这样的代码：
+
+```csharp
+Preconditions.CheckArgument(
+    start.Year < 2000,
+    Invariant($"Start date {start:yyyy-MM-dd} should not be earlier than year 2000."));
+```
+
+或者，您可能有一个日志框架，仅在执行时配置了适当级别时才记录。例如，您可能希望记录服务器接收到的请求的大小：
+
+```csharp
+Logger.Debug("Received request with {0} bytes", request.Length);
+```
+
+您可能想通过将代码更改为以下内容来使用内插字符串字面量：
+
+```csharp
+Logger.Debug($"Received request with {request.Length} bytes");
+```
+
+这将是一个坏主意；即使字符串将被丢弃，它也会强制进行格式化，因为格式化将在调用方法之前无条件执行，而不是仅在需要时在方法内部执行。尽管字符串格式化在性能方面并不非常昂贵，但您不想不必要地这样做。
+
+您可能想知道 `FormattableString` 是否会在这里帮助。如果验证或日志记录库接受 `FormattableString` 作为输入参数，您可以延迟格式化并在单个位置控制用于格式化的文化。尽管这是真的，但它仍然涉及每次创建对象，这仍然是不必要的成本。
+
+#### **为可读性而格式化**
+
+不使用内插字符串字面量的第二个原因是它们可能使代码更难阅读。短表达式绝对没问题，有助于可读性。但是，当表达式变长时，弄清楚字面量的哪些部分是代码，哪些部分是文本需要更多时间。我发现括号是杀手；如果表达式中有多个方法或构造函数调用，它们最终会变得混乱。当文本中也包含括号时，情况更是如此。
+
+这是一个来自 Noda Time 的真实示例。它在一个测试中而不是生产代码中，但我仍然希望测试是可读的：
+
+```csharp
+private static string FormatMemberDebugName(MemberInfo m) =>
+    string.Format("{0}.{1}({2})",
+        m.DeclaringType.Name,
+        m.Name,
+        string.Join(", ", GetParameters(m).Select(p => p.ParameterType)));
+```
+
+这还不错，但想象一下把这三个参数放在字符串里面。我做过，而且不好看；您最终会得到一个超过 100 个字符的字面量。您不能像上面那样用垂直格式拆分它，让每个参数独立，所以它最终会成为噪音。
+
+最后，举一个讽刺的例子来说明这可能是一个多么糟糕的想法，请记住本章开头的代码：
+
+```csharp
+Console.Write("What's your name? ");
+string name = Console.ReadLine();
+Console.WriteLine("Hello, {0}!", name);
+```
+
+您可以使用内插字符串字面量将所有这些放在一个语句中。您可能持怀疑态度；毕竟，这段代码由三个单独的语句组成，而内插字符串字面量只能包含表达式。这是真的，但语句体 lambda 表达式仍然是表达式。您需要将 lambda 表达式转换为特定的委托类型，然后需要调用它以获得结果，但这是可行的。只是不愉快。这是一个选项，至少通过内插逐字字符串字面量在每个语句中使用单独的行，但这是它唯一的好处：
+
+```csharp
+Console.WriteLine($@"Hello {((Func<string>)(() =>
+{
+    Console.Write("What's your name? ");
+    return Console.ReadLine();
+}))()}!");
+```
+
+我强烈建议：运行代码以证明它有效，然后尽快远离它。在您从震惊中恢复时，让我们看看 C# 6 中另一个面向字符串的特性。
+
+
+
+# **使用 nameof 访问标识符**
+
+`nameof` 运算符描述起来很简单：它接受一个引用成员或局部变量的表达式，结果是该成员或变量的简单名称的编译时常量字符串。就这么简单。任何时候您硬编码类、属性或方法的名称时，使用 `nameof` 运算符会更好。您的代码现在和面对更改时都会更加健壮。
+
+## **nameof 的第一个示例**
+
+在语法上，`nameof` 运算符类似于 `typeof` 运算符，只是括号内的标识符不必是类型。以下清单展示了一个包含几种成员的简短示例。
+
+**清单 9.12 打印类、方法、字段和参数的名称**
+```csharp
+using System;
+
+class SimpleNameof
+{
+    private string field;
+
+    static void Main(string[] args)
+    {
+        Console.WriteLine(nameof(SimpleNameof)); // 类名
+        Console.WriteLine(nameof(Main));         // 方法名
+        Console.WriteLine(nameof(args));         // 参数名
+        Console.WriteLine(nameof(field));        // 字段名
+    }
+}
+```
+
+结果正是您可能期望的：
+```
+SimpleNameof
+Main
+args
+field
+```
+
+到目前为止，一切顺利。但是，显然，您可以使用字符串字面量达到相同的结果。代码也会更短。那么为什么使用 `nameof` 更好呢？用一个词来说就是：健壮性。如果您在字符串字面量中打错字，没有什么会告诉您，而如果您在 `nameof` 操作数中打错字，您将得到编译时错误。
+
+**注意**：如果您引用了具有相似名称的不同成员，编译器仍然无法发现问题。如果您有两个仅大小写不同的成员，例如 `filename` 和 `fileName`，您可以轻松引用错误的成员而编译器不会注意到。这是避免使用如此相似名称的一个好理由，但命名如此相似一直是个坏主意；即使您不会混淆编译器，也很容易混淆人类读者。
+
+编译器不仅会在您出错时告诉您，而且它知道您的 `nameof` 代码与您命名的成员或变量相关联。如果您以支持重构的方式重命名它，您的 `nameof` 操作数也会更改。
+
+例如，考虑以下清单。其目的无关紧要，但请注意 `oldName` 出现了三次：参数声明、使用 `nameof` 获取其名称以及作为简单表达式获取其值。
+
+**清单 9.13 一个在其主体中两次使用其参数的简单方法**
+```csharp
+static void RenameDemo(string oldName)
+{
+    Console.WriteLine($"{nameof(oldName)} = {oldName}");
+}
+```
+
+在 Visual Studio 中，如果您将光标放在 `oldName` 的任何一次出现中，并按 F2 进行重命名操作，所有三个将被一起重命名，如图 9.2 所示。
+
+相同的方法适用于其他名称（方法、类型等）。基本上，`nameof` 以一种硬编码字符串字面量无法做到的方式支持重构。但是您应该在什么时候使用它呢？
+
+![image-20260127083715211](https://ddd-1313653702.cos.ap-guangzhou.myqcloud.com/now/20260127083715288.png)
+
+
+
+
+
+## nameof的常见用法
+
+我并不打算声称此处的示例是nameof唯一合理的用法。它们仅仅是我最常遇到的一些场景。这些地方大多在C# 6之前，你会看到要么是硬编码的名称，要么可能使用了表达式树作为解决方案——这种方法虽然对重构友好，但比较复杂。
+
+**参数验证**
+在第8章中，当我展示Noda Time中`Preconditions.CheckNotNull`的用法时，那并不是库中实际的代码。真实的代码包含了值为空的参数名称，这使得它有用得多。我在那里展示的`InZone`方法如下所示：
+
+```csharp
+public ZonedDateTime InZone(
+    DateTimeZone zone,
+    ZoneLocalMappingResolver resolver)
+{
+    Preconditions.CheckNotNull(zone, nameof(zone));
+    Preconditions.CheckNotNull(resolver, nameof(resolver));
+    return zone.ResolveLocal(this, resolver);
+}
+```
+
+其他的前置条件方法也以类似的方式使用。这是我迄今为止发现的`nameof`最常见的用法。如果你还没有开始验证公有方法的参数，我强烈建议你开始这样做；`nameof`使得执行健壮的验证并提供信息性消息变得比以往任何时候都更容易。
+
+**计算属性的属性更改通知**
+正如你在7.2节中看到的，`CallerMemberNameAttribute`使得在`INotifyPropertyChanged`实现中，当属性本身改变时，轻松地引发事件。但是，如果更改一个属性的值会影响到另一个属性呢？例如，假设你有一个`Rectangle`类，具有读/写的`Height`和`Width`属性以及一个只读的`Area`属性。能够为`Area`属性引发事件并以一种安全的方式指定属性名称是很有用的，如下面的列表所示。
+
+**列表9.14 使用nameof引发属性更改通知**
+```csharp
+public class Rectangle : INotifyPropertyChanged
+{
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    private double width;
+    private double height;
+
+    public double Width
+    {
+        get { return width; }
+        set
+        {
+            // 当值未改变时避免引发事件
+            if (width == value)
+            {
+                return;
+            }
+            width = value;
+            // 为Width属性引发事件
+            RaisePropertyChanged();
+            // 为Area属性引发事件
+            RaisePropertyChanged(nameof(Area));
+        }
+    }
+
+    public double Height { ... } // 实现方式与Width类似
+    // 计算属性
+    public double Area => Width * Height;
+}
+
+// 根据7.2节的更改通知实现
+private void RaisePropertyChanged(
+    [CallerMemberName] string propertyName = null) { ... }
+```
+
+这个列表的大部分内容与你用C# 5编写的代码完全相同，但**加粗**的那一行原本必须是`RaisePropertyChanged("Area")` 或 `RaisePropertyChanged(() => Area)`。后一种方法在`RaisePropertyChanged`代码方面会很复杂，并且效率低下，因为它构建一个表达式树仅仅是为了检查名称。`nameof`解决方案要简洁得多。
+
+**特性**
+有时特性会引用其他成员以指示成员之间如何相互关联。当你想要引用一个类型时，你已经可以使用`typeof`来建立这种关系，但这不适用于任何其他类型的成员。作为一个具体例子，NUnit允许测试使用从字段、属性或方法中提取的值进行参数化，这是通过`TestCaseSource`特性实现的。`nameof`运算符允许你以安全的方式引用该成员。下面的列表展示了Noda Time中的另一个示例，测试从时区数据库（TZDB，现由IANA托管）加载的所有时区在时间的起点和终点是否表现正常。
+
+**列表9.15 使用nameof指定测试用例源**
+```csharp
+static readonly IEnumerable<DateTimeZone> AllZones =
+    DateTimeZoneProviders.Tzdb.GetAllZones(); // 用于检索所有TZDB时区的字段
+
+[Test]
+[TestCaseSource(nameof(AllZones))] // 使用nameof引用该字段
+public void AllZonesStartAndEnd(DateTimeZone zone)
+{
+    // ... 测试方法体省略
+}
+// 测试方法依次传入每个时区进行调用
+```
+
+这里的实用性并不局限于测试。它适用于任何指示关系的特性。你可以想象前面章节中一个更复杂的`RaisePropertyChanged`方法，其中属性之间的关系可以用特性而不是在代码内部指定：
+
+```csharp
+[DerivedProperty(nameof(Area))]
+public double Width { ... }
+```
+
+事件引发方法可以维护一个缓存的数据结构，表明无论何时它被通知`Width`属性已更改，它也应该为`Area`引发一个更改通知。
+
+类似地，在对象关系映射技术中，例如Entity Framework，在一个类中拥有两个属性是相当常见的：一个用于外键，另一个用于表示该键所代表的实体。下面的例子展示了这一点：
+
+```csharp
+public class Employee
+{
+    [ForeignKey(nameof(Employer))]
+    public Guid EmployerId { get; set; }
+    public Company Employer { get; set; }
+}
+```
+
+毫无疑问，还有许多其他特性可以利用这种方法。
+
+既然你意识到了这一点，你可能会在你现有的代码库中找到受益于`nameof`的地方。特别是，你应该寻找那些你需要对名称使用反射的代码，这些名称在编译时你是知道的，但以前无法以简洁的方式指定。然而，为了完整性，还有一些小细节需要介绍。
+
+---
+
+**使用nameof的技巧与陷阱**
+你可能永远不需要了解本节中的任何细节。这部分内容主要是为了以防你对`nameof`的行为感到惊讶。总的来说，这是一个相当简单的特性，但有几个方面可能会让你感到意外。
+
+**引用其他类型的成员**
+通常，能够从另一个类型的代码中引用一个类型的成员是很有用的。回到`TestCaseSource`特性，例如，除了名称，你还可以指定一个类型，NUnit将在该类型中查找该名称。如果你有一个将被多个测试使用的信息源，把它放在一个公共位置是有意义的。要用`nameof`做到这一点，你也需要用类型来限定它。结果将是简单名称：
+
+```csharp
+[TestCaseSource(typeof(Cultures), nameof(Cultures.AllCultures))]
+```
+
+这等同于以下代码，除了`nameof`的所有常规好处：
+
+```csharp
+[TestCaseSource(typeof(Cultures), "AllCultures")]
+```
+
+你也可以使用相关类型的变量来访问成员名称，尽管只适用于实例成员。反过来，你可以同时为静态成员和实例成员使用类型的名称。下面的列表展示了所有有效的排列组合。
+
+**列表9.16 访问其他类型成员名称的所有有效方式**
+```csharp
+class OtherClass
+{
+    public static int StaticMember => 3;
+    public int InstanceMember => 3;
+}
+
+class QualifiedNameof
+{
+    static void Main()
+    {
+        OtherClass instance = null;
+        Console.WriteLine(nameof(instance.InstanceMember));
+        Console.WriteLine(nameof(OtherClass.StaticMember));
+        Console.WriteLine(nameof(OtherClass.InstanceMember));
+    }
+}
+```
+
+我倾向于尽可能总是使用类型名称；如果你使用变量代替，看起来变量的值可能很重要，但实际上它仅在编译时用于确定类型。如果你使用的是匿名类型，就没有类型名可用，所以你必须使用变量。
+
+成员必须仍然可访问，你才能使用`nameof`引用它；如果列表9.16中的`StaticMember`或`InstanceMember`是私有的，尝试访问它们名称的代码将无法编译。
+
+**泛型**
+你可能想知道如果你尝试获取泛型类型或方法的名称会发生什么，以及它必须如何指定。特别是，`typeof`允许使用已绑定和未绑定的类型名称；`typeof(List<string>)` 和 `typeof(List<>)` 都是有效的，并给出不同的结果。
+
+对于`nameof`，必须指定类型参数，但结果中不包含它。此外，结果中没有任何关于类型参数数量的指示：`nameof(Action<string>)` 和 `nameof(Action<string, string>)` 的值都只是 `"Action"`。这可能会令人恼火，但它消除了关于结果名称应如何表示数组、匿名类型、进一步的泛型类型等任何问题。
+
+在我看来，将来可能会取消指定类型参数的要求，既是为了与`typeof`保持一致，也是为了避免必须指定一个对结果没有影响的类型。但是，将结果更改为包含类型参数数量或类型参数本身将是一个破坏性更改，我不认为这会发生。在大多数这种情况下，无论如何，使用`typeof`获取`Type`对象会是更好的选择。
+
+你可以将类型参数与`nameof`运算符一起使用，但与`typeof(T)`不同，它将始终返回类型参数的名称，而不是在执行时用于该类型参数的类型实参的名称。下面是一个最小示例：
+
+```csharp
+static string Method<T>() => nameof(T); // 总是返回 "T"
+```
+
+无论你如何调用该方法：`Method<Guid>()` 或 `Method<Button>()` 都将返回 `"T"`。
+
+**使用别名**
+通常，提供类型或命名空间别名的`using`指令在运行时没有效果。它们只是引用相同类型或命名空间的不同方式。`nameof`运算符是这条规则的一个例外。下面列表的输出是`GuidAlias`，而不是`Guid`。
+
+**列表9.17 在nameof运算符中使用别名**
+```csharp
+using System;
+using GuidAlias = System.Guid;
+
+class Test
+{
+    static void Main()
+    {
+        Console.WriteLine(nameof(GuidAlias));
+    }
+}
+```
+
+**预定义别名、数组和可空值类型**
+`nameof`运算符不能与任何预定义别名（`int`、`char`、`long`等）或表示可空值类型的`?`后缀或数组类型一起使用。因此，以下所有内容都是无效的：
+
+```csharp
+nameof(float)      // System.Single的预定义别名
+nameof(Guid?)      // Nullable<Guid>的简写
+nameof(String[])   // 数组
+```
+
+这些有点烦人，但你必须为预定义别名使用CLR类型名称，并为可空值类型使用`Nullable<T>`语法：
+
+```csharp
+nameof(Single)
+nameof(Nullable<Guid>)
+```
+
+正如前面关于泛型的小节所指出的，`Nullable<T>`的名称无论如何都总是`Nullable`。
+
+**名称、简单名称，且仅为名称**
+`nameof`运算符在某种程度上是神话般的`infoof`运算符的表亲，后者从未在C#语言设计会议之外被见过。（有关`infoof`的更多信息，请参见 http://mng.bz/6GVe。）如果团队真的设法捕获并驯服了`infoof`，它可能会返回对`MethodInfo`、`EventInfo`、`PropertyInfo`对象及其友元对象的引用。唉，`infoof`迄今为止已被证明是难以捉摸的，但许多它用来逃避捕获的技巧对更简单的`nameof`运算符来说是不可用的。尝试获取重载方法的名称？没问题；反正它们都有相同的名称。无法轻易分辨你指的是属性还是类型？同样，如果它们都有相同的名称，你使用哪个并不重要。尽管`infoof`如果能被合理设计出来，肯定能提供超越`nameof`的好处，但`nameof`运算符要简单得多，并且仍然解决了许多相同的用例。
+
+关于返回结果需要注意的一点——简单名称或用不那么规范的术语说的“末尾的那部分”：无论你使用`nameof(Guid)`还是在一个导入了`System`命名空间的类中使用`nameof(System.Guid)`，结果仍然只是`"Guid"`。
+
+**命名空间**
+我没有详细说明`nameof`可以用于哪些所有成员，因为这是你所期望的集合：基本上，除了终结器和构造函数之外的所有成员。但是因为我们通常根据类型和类型内的成员来思考成员，你可能会惊讶地发现你可以获取命名空间的名称。是的，命名空间也是其他命名空间的成员。
+
+但是考虑到前面关于只返回简单名称的规则，这并不特别有用。如果你使用`nameof(System.Collections.Generic)`，我猜你希望结果是`System.Collections.Generic`，但实际上，它只是`Generic`。我从未遇到过这种情况有用的时候，但话说回来，将命名空间作为编译时常量来了解也很少重要。
+
+---
+
+**总结**
+* 内插字符串字面量允许你编写更简单的字符串格式化代码。
+* 你仍然可以在内插字符串字面量中使用格式字符串来提供更多格式化细节，但格式字符串必须在编译时已知。
+* 内插逐字字符串字面量提供了内插字符串字面量和逐字字符串字面量特性的混合。
+* `FormattableString`类型提供了在格式化发生之前访问格式化字符串所需的所有信息。
+* `FormattableString`在.NET 4.6和.NET Standard 1.3中开箱即用，但如果你在早期版本中提供自己的实现，编译器将使用它。
+* `nameof`运算符提供了对重构友好且能防止拼写错误的方式来访问C#代码中的名称。
