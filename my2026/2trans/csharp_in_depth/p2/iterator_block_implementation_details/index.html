@@ -1,0 +1,596 @@
+<!doctype html><html lang=en dir=ltr><head><meta charset=UTF-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content='迭代器块实现细节：自动生成的状态机
+引言# 自 .NET 首次发布以来，迭代器就已经存在，但 C# 2 通过迭代器块让它们变得易于实现。本文将深入探讨微软 C# 编译器如何将迭代器块转换为状态机的细节。如果你对 IEnumerable 和 IEnumerator 接口（及其泛型对应物）或迭代器块的基础知识不太确定，建议在继续阅读本文之前，先阅读详细介绍这些内容的文章（或《C# in Depth》的第 6 章，这是免费样章）。
+本文几乎所有的内容都是实现特定的。例如，Mono 编译器可能以略有不同的方式处理事情，但很可能非常相似；当不确定可以依赖什么时，请查阅语言规范（C# 3.0 规范的第 10.14 节涵盖了迭代器块）。
+高级概述：模式是什么？# 这篇文章最初是因为一位读者询问了用于返回 IEnumerator 的方法与返回 IEnumerable 的方法使用迭代器块的区别而产生的。此外，还存在非泛型接口和泛型接口之间的选择。我们将从为四种可能性中的每一种使用相同的迭代器块开始，并查看生成代码的差异。在整篇文章中，我将展示编译器生成的代码的 C# 等效形式。显然，编译器实际上并不生成 C#，但我使用 Reflector 将代码反编译为 C#。
+我们的第一个示例将按顺序产生数字 0 到 9。最初我们将方法声明为返回非泛型 IEnumerator。以下是完整的代码：
+using System; using System.Collections; class Test { static IEnumerator GetCounter() { for (int count = 0; count < 10; count++) { yield return count; } } }很简单，对吧？那么，让我们看看编译后它变成了什么。屏住呼吸…
+internal class Test { // 注意这里没有执行我们原始代码的任何部分 private static IEnumerator GetCounter() { return new <GetCounter>d__0(0); } // 编译器自动创建的嵌套类型，用于实现迭代器 [CompilerGenerated] private sealed class <GetCounter>d__0 : IEnumerator<object>, IEnumerator, IDisposable { // 字段：总会有一个 "state" 和 "current"，但 "count" 来自我们迭代器块中的局部变量 private int <>1__state; private object <>2__current; public int <count>5__1; [DebuggerHidden] public <GetCounter>d__0(int <>1__state) { this.<>1__state = <>1__state; } // 几乎所有实际工作都在这里发生 private bool MoveNext() { switch (this.<>1__state) { case 0: this.<>1__state = -1; this.<count>5__1 = 0; while (this.<count>5__1 < 10) { this.<>2__current = this.<count>5__1; this.<>1__state = 1; return true; Label_004B: this.<>1__state = -1; this.<count>5__1++; } break; case 1: goto Label_004B; } return false; } [DebuggerHidden] void IEnumerator.Reset() { throw new NotSupportedException(); } void IDisposable.Dispose() { } object IEnumerator<object>.Current { [DebuggerHidden] get { return this.<>2__current; } } object IEnumerator.Current { [DebuggerHidden] get { return this.<>2__current; } } } }我们将从较高层次开始了解发生了什么，解释每个成员。真正的工作是在 MoveNext() 中完成的，所以我们先略过这一部分，当我们对代码的其他部分满意后，再深入探讨这个方法。从上到下查看代码，以下是连续注释：
+'><meta name=theme-color media="(prefers-color-scheme: light)" content="#ffffff"><meta name=theme-color media="(prefers-color-scheme: dark)" content="#343a40"><meta name=color-scheme content="light dark"><meta property="og:url" content="https://zimang.fun/my2026/2trans/csharp_in_depth/p2/iterator_block_implementation_details/"><meta property="og:site_name" content="Zimang Book"><meta property="og:title" content="迭代器块实现细节：自动生成的状态机"><meta property="og:description" content='迭代器块实现细节：自动生成的状态机
+引言# 自 .NET 首次发布以来，迭代器就已经存在，但 C# 2 通过迭代器块让它们变得易于实现。本文将深入探讨微软 C# 编译器如何将迭代器块转换为状态机的细节。如果你对 IEnumerable 和 IEnumerator 接口（及其泛型对应物）或迭代器块的基础知识不太确定，建议在继续阅读本文之前，先阅读详细介绍这些内容的文章（或《C# in Depth》的第 6 章，这是免费样章）。
+本文几乎所有的内容都是实现特定的。例如，Mono 编译器可能以略有不同的方式处理事情，但很可能非常相似；当不确定可以依赖什么时，请查阅语言规范（C# 3.0 规范的第 10.14 节涵盖了迭代器块）。
+高级概述：模式是什么？# 这篇文章最初是因为一位读者询问了用于返回 IEnumerator 的方法与返回 IEnumerable 的方法使用迭代器块的区别而产生的。此外，还存在非泛型接口和泛型接口之间的选择。我们将从为四种可能性中的每一种使用相同的迭代器块开始，并查看生成代码的差异。在整篇文章中，我将展示编译器生成的代码的 C# 等效形式。显然，编译器实际上并不生成 C#，但我使用 Reflector 将代码反编译为 C#。
+我们的第一个示例将按顺序产生数字 0 到 9。最初我们将方法声明为返回非泛型 IEnumerator。以下是完整的代码：
+using System; using System.Collections; class Test { static IEnumerator GetCounter() { for (int count = 0; count < 10; count++) { yield return count; } } }很简单，对吧？那么，让我们看看编译后它变成了什么。屏住呼吸…
+internal class Test { // 注意这里没有执行我们原始代码的任何部分 private static IEnumerator GetCounter() { return new <GetCounter>d__0(0); } // 编译器自动创建的嵌套类型，用于实现迭代器 [CompilerGenerated] private sealed class <GetCounter>d__0 : IEnumerator<object>, IEnumerator, IDisposable { // 字段：总会有一个 "state" 和 "current"，但 "count" 来自我们迭代器块中的局部变量 private int <>1__state; private object <>2__current; public int <count>5__1; [DebuggerHidden] public <GetCounter>d__0(int <>1__state) { this.<>1__state = <>1__state; } // 几乎所有实际工作都在这里发生 private bool MoveNext() { switch (this.<>1__state) { case 0: this.<>1__state = -1; this.<count>5__1 = 0; while (this.<count>5__1 < 10) { this.<>2__current = this.<count>5__1; this.<>1__state = 1; return true; Label_004B: this.<>1__state = -1; this.<count>5__1++; } break; case 1: goto Label_004B; } return false; } [DebuggerHidden] void IEnumerator.Reset() { throw new NotSupportedException(); } void IDisposable.Dispose() { } object IEnumerator<object>.Current { [DebuggerHidden] get { return this.<>2__current; } } object IEnumerator.Current { [DebuggerHidden] get { return this.<>2__current; } } } }我们将从较高层次开始了解发生了什么，解释每个成员。真正的工作是在 MoveNext() 中完成的，所以我们先略过这一部分，当我们对代码的其他部分满意后，再深入探讨这个方法。从上到下查看代码，以下是连续注释：'><meta property="og:locale" content="en"><meta property="og:type" content="article"><meta property="article:section" content="my2026"><meta property="article:modified_time" content="2026-01-16T07:53:41+08:00"><meta itemprop=name content="迭代器块实现细节：自动生成的状态机"><meta itemprop=description content='迭代器块实现细节：自动生成的状态机
+引言# 自 .NET 首次发布以来，迭代器就已经存在，但 C# 2 通过迭代器块让它们变得易于实现。本文将深入探讨微软 C# 编译器如何将迭代器块转换为状态机的细节。如果你对 IEnumerable 和 IEnumerator 接口（及其泛型对应物）或迭代器块的基础知识不太确定，建议在继续阅读本文之前，先阅读详细介绍这些内容的文章（或《C# in Depth》的第 6 章，这是免费样章）。
+本文几乎所有的内容都是实现特定的。例如，Mono 编译器可能以略有不同的方式处理事情，但很可能非常相似；当不确定可以依赖什么时，请查阅语言规范（C# 3.0 规范的第 10.14 节涵盖了迭代器块）。
+高级概述：模式是什么？# 这篇文章最初是因为一位读者询问了用于返回 IEnumerator 的方法与返回 IEnumerable 的方法使用迭代器块的区别而产生的。此外，还存在非泛型接口和泛型接口之间的选择。我们将从为四种可能性中的每一种使用相同的迭代器块开始，并查看生成代码的差异。在整篇文章中，我将展示编译器生成的代码的 C# 等效形式。显然，编译器实际上并不生成 C#，但我使用 Reflector 将代码反编译为 C#。
+我们的第一个示例将按顺序产生数字 0 到 9。最初我们将方法声明为返回非泛型 IEnumerator。以下是完整的代码：
+using System; using System.Collections; class Test { static IEnumerator GetCounter() { for (int count = 0; count < 10; count++) { yield return count; } } }很简单，对吧？那么，让我们看看编译后它变成了什么。屏住呼吸…
+internal class Test { // 注意这里没有执行我们原始代码的任何部分 private static IEnumerator GetCounter() { return new <GetCounter>d__0(0); } // 编译器自动创建的嵌套类型，用于实现迭代器 [CompilerGenerated] private sealed class <GetCounter>d__0 : IEnumerator<object>, IEnumerator, IDisposable { // 字段：总会有一个 "state" 和 "current"，但 "count" 来自我们迭代器块中的局部变量 private int <>1__state; private object <>2__current; public int <count>5__1; [DebuggerHidden] public <GetCounter>d__0(int <>1__state) { this.<>1__state = <>1__state; } // 几乎所有实际工作都在这里发生 private bool MoveNext() { switch (this.<>1__state) { case 0: this.<>1__state = -1; this.<count>5__1 = 0; while (this.<count>5__1 < 10) { this.<>2__current = this.<count>5__1; this.<>1__state = 1; return true; Label_004B: this.<>1__state = -1; this.<count>5__1++; } break; case 1: goto Label_004B; } return false; } [DebuggerHidden] void IEnumerator.Reset() { throw new NotSupportedException(); } void IDisposable.Dispose() { } object IEnumerator<object>.Current { [DebuggerHidden] get { return this.<>2__current; } } object IEnumerator.Current { [DebuggerHidden] get { return this.<>2__current; } } } }我们将从较高层次开始了解发生了什么，解释每个成员。真正的工作是在 MoveNext() 中完成的，所以我们先略过这一部分，当我们对代码的其他部分满意后，再深入探讨这个方法。从上到下查看代码，以下是连续注释：'><meta itemprop=dateModified content="2026-01-16T07:53:41+08:00"><meta itemprop=wordCount content="1721"><title>迭代器块实现细节：自动生成的状态机 | Zimang Book</title><link rel=icon href=/favicon.png><link rel=manifest href=/manifest.json><link rel=canonical href=https://zimang.fun/my2026/2trans/csharp_in_depth/p2/iterator_block_implementation_details/><link rel=stylesheet href=/book.min.cc2c524ed250aac81b23d1f4af87344917b325208841feca0968fe450f570575.css integrity="sha256-zCxSTtJQqsgbI9H0r4c0SRezJSCIQf7KCWj+RQ9XBXU=" crossorigin=anonymous><script defer src=/fuse.min.js></script><script defer src=/en.search.min.3504be54c89f9db5f9bf12863bf27e513677dd2a46e917279f4625ecf8f0d6fa.js integrity="sha256-NQS+VMifnbX5vxKGO/J+UTZ33SpG6Rcnn0Yl7Pjw1vo=" crossorigin=anonymous></script></head><body dir=ltr class="book-kind-page book-type-my2026"><input type=checkbox class="hidden toggle" id=menu-control>
+<input type=checkbox class="hidden toggle" id=toc-control><main class="container flex"><aside class=book-menu><div class=book-menu-content><nav><h2 class=book-brand><a class="flex align-center" href=/><span>Zimang Book</span></a></h2><div class="book-search hidden"><input id=book-search-input type=text placeholder=Search aria-label=Search maxlength=64 data-hotkeys=s/><div class="book-search-spinner hidden"></div><ul id=book-search-results></ul></div><script>document.querySelector(".book-search").classList.remove("hidden")</script><ul><li><a href=/my2026/2lab/>2lab</a><ul><li><a href=/my2026/2lab/android/>安卓LAB</a><ul></ul></li></ul></li><li><a href=/my2026/2plan/>2plan</a><ul><li><a href=/my2026/2plan/gemedev/sublime/>总览</a></li><li><a href=/my2026/2plan/subject/>科目</a><ul></ul></li><li><a href=/my2026/2plan/gemedev/c/>能力节点</a></li></ul></li><li><a href=/my2026/2read/>2read</a><ul></ul></li><li><a href=/my2026/2trans/>2trans</a><ul><li class=book-section-flat><input type=checkbox id=section-e4b3c4290c1559121b143673c7b0478c class=toggle checked>
+<label for=section-e4b3c4290c1559121b143673c7b0478c class=flex><a href=/my2026/2trans/csharp_in_depth/>C# in depth</a>
+<img src=/icons/chevron-right.svg class=book-icon alt=Expand></label><ul><li><a href=/my2026/2trans/csharp_in_depth/p1/>P1 C# in context</a><ul><li><a href=/my2026/2trans/csharp_in_depth/p1/survival-of-the-sharpest/>Survival of the sharpest</a></li></ul></li><li><a href=/my2026/2trans/csharp_in_depth/p2/>p2 c# 2~5</a><ul><li><a href=/my2026/2trans/csharp_in_depth/p2/csharp5_bonus_features/>C# 5 bonus features</a></li><li><a href=/my2026/2trans/csharp_in_depth/p2/csharp2/>C#2</a></li><li><a href=/my2026/2trans/csharp_in_depth/p2/csharp4/>C#4</a></li><li><a href=/my2026/2trans/csharp_in_depth/p2/covariance_and_contravariance_in_csharp/>C#中的协变与逆变：数组协变性</a></li><li><a href=/my2026/2trans/csharp_in_depth/p2/async_imp/>异步实现</a></li><li><a href=/my2026/2trans/csharp_in_depth/p2/writing_asynchronous_code/>编写异步代码</a></li><li><a href=/my2026/2trans/csharp_in_depth/p2/iterator_block_implementation_details/ class=active>迭代器块实现细节：自动生成的状态机</a></li><li><a href=/my2026/2trans/csharp_in_depth/p2/csharp3/>C# 3: LINQ and everything that comes with it</a></li></ul></li><li><a href=/my2026/2trans/csharp_in_depth/p3/>p3 c# 6</a><ul><li><a href=/my2026/2trans/csharp_in_depth/p3/a_sm%C3%B6rg%C3%A5sbord_of_features_for_concise_code/>精简代码的功能集</a></li><li><a href=/my2026/2trans/csharp_in_depth/p3/stringy_features/>字符串属性</a></li><li><a href=/my2026/2trans/csharp_in_depth/p3/super_sleek_properties_and_exp_bodied_members/>超简洁的属性和表达式体成员</a></li></ul></li><li><a href=/my2026/2trans/csharp_in_depth/p4/>P4</a><ul><li><a href=/my2026/2trans/csharp_in_depth/p4/csharp8_and_beyond/>C# 8及更高版本</a></li><li><a href=/my2026/2trans/csharp_in_depth/p4/concise_code_in_csharp7/>C# 7 中的简介代码</a></li><li><a href=/my2026/2trans/csharp_in_depth/p4/imporving_eff_with_more_pass_by_ref/>通过更多引用传递提高效率</a></li><li><a href=/my2026/2trans/csharp_in_depth/p4/deconstruction_and_pattern_matching/>解构与模式匹配</a></li><li><a href=/my2026/2trans/csharp_in_depth/p4/composition_using_tuples/>使用元组进行组合</a></li></ul></li></ul></li></ul></li></ul><ul><li><a href=/posts/ title=Blog>Blog</a></li></ul></nav><script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script></div></aside><div class=book-page><header class="book-header hidden"><div class="flex align-center justify-between"><label for=menu-control><img src=/icons/menu.svg class=book-icon alt=Menu></label><h3>迭代器块实现细节：自动生成的状态机</h3><label for=toc-control></label></div></header><article class="markdown book-article"><p>迭代器块实现细节：自动生成的状态机</p><h1 id=引言>引言<a class=anchor href=#%e5%bc%95%e8%a8%80>#</a></h1><p>自 .NET 首次发布以来，迭代器就已经存在，但 C# 2 通过迭代器块让它们变得易于实现。本文将深入探讨微软 C# 编译器如何将迭代器块转换为状态机的细节。如果你对 <code>IEnumerable</code> 和 <code>IEnumerator</code> 接口（及其泛型对应物）或迭代器块的基础知识不太确定，建议在继续阅读本文之前，先阅读详细介绍这些内容的文章（或《C# in Depth》的第 6 章，这是免费样章）。</p><p>本文几乎所有的内容都是实现特定的。例如，Mono 编译器可能以略有不同的方式处理事情，但很可能非常相似；当不确定可以依赖什么时，请查阅语言规范（C# 3.0 规范的第 10.14 节涵盖了迭代器块）。</p><h1 id=高级概述模式是什么>高级概述：模式是什么？<a class=anchor href=#%e9%ab%98%e7%ba%a7%e6%a6%82%e8%bf%b0%e6%a8%a1%e5%bc%8f%e6%98%af%e4%bb%80%e4%b9%88>#</a></h1><p>这篇文章最初是因为一位读者询问了用于返回 <code>IEnumerator</code> 的方法与返回 <code>IEnumerable</code> 的方法使用迭代器块的区别而产生的。此外，还存在非泛型接口和泛型接口之间的选择。我们将从为四种可能性中的每一种使用相同的迭代器块开始，并查看生成代码的差异。在整篇文章中，我将展示编译器生成的代码的 C# 等效形式。显然，编译器实际上并不生成 C#，但我使用 Reflector 将代码反编译为 C#。</p><p>我们的第一个示例将按顺序产生数字 0 到 9。最初我们将方法声明为返回非泛型 <code>IEnumerator</code>。以下是完整的代码：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-csharp data-lang=csharp><span style=display:flex><span><span style=color:#66d9ef>using</span> System;
+</span></span><span style=display:flex><span><span style=color:#66d9ef>using</span> System.Collections;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Test</span>
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>static</span> IEnumerator GetCounter()
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>for</span> (<span style=color:#66d9ef>int</span> count = <span style=color:#ae81ff>0</span>; count &lt; <span style=color:#ae81ff>10</span>; count++)
+</span></span><span style=display:flex><span>        {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>yield</span> <span style=color:#66d9ef>return</span> count;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}</span></span></code></pre></div><p>很简单，对吧？那么，让我们看看编译后它变成了什么。屏住呼吸&mldr;</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-csharp data-lang=csharp><span style=display:flex><span><span style=color:#66d9ef>internal</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Test</span>
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// 注意这里没有执行我们原始代码的任何部分</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> IEnumerator GetCounter()
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> &lt;GetCounter&gt;d__0(<span style=color:#ae81ff>0</span>);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// 编译器自动创建的嵌套类型，用于实现迭代器</span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>    [CompilerGenerated]</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>sealed</span> <span style=color:#66d9ef>class</span> &lt;GetCounter&gt;d__0 : IEnumerator&lt;<span style=color:#66d9ef>object</span>&gt;, IEnumerator, IDisposable
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// 字段：总会有一个 &#34;state&#34; 和 &#34;current&#34;，但 &#34;count&#34; 来自我们迭代器块中的局部变量</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>int</span> &lt;&gt;<span style=color:#ae81ff>1__</span>state;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>object</span> &lt;&gt;<span style=color:#ae81ff>2__</span>current;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>int</span> &lt;count&gt;<span style=color:#ae81ff>5__1</span>;
+</span></span><span style=display:flex><span><span style=color:#a6e22e>
+</span></span></span><span style=display:flex><span><span style=color:#a6e22e>        [DebuggerHidden]</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>public</span> &lt;GetCounter&gt;d__0(<span style=color:#66d9ef>int</span> &lt;&gt;<span style=color:#ae81ff>1__</span>state)
+</span></span><span style=display:flex><span>        {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = &lt;&gt;<span style=color:#ae81ff>1__</span>state;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// 几乎所有实际工作都在这里发生</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>bool</span> MoveNext()
+</span></span><span style=display:flex><span>        {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>switch</span> (<span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state)
+</span></span><span style=display:flex><span>            {
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>case</span> <span style=color:#ae81ff>0</span>:
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = -<span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>this</span>.&lt;count&gt;<span style=color:#ae81ff>5__1</span> = <span style=color:#ae81ff>0</span>;
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>while</span> (<span style=color:#66d9ef>this</span>.&lt;count&gt;<span style=color:#ae81ff>5__1</span> &lt; <span style=color:#ae81ff>10</span>)
+</span></span><span style=display:flex><span>                    {
+</span></span><span style=display:flex><span>                        <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>2__</span>current = <span style=color:#66d9ef>this</span>.&lt;count&gt;<span style=color:#ae81ff>5__1</span>;
+</span></span><span style=display:flex><span>                        <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = <span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>                        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span>;
+</span></span><span style=display:flex><span>                    Label_004B:
+</span></span><span style=display:flex><span>                        <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = -<span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>                        <span style=color:#66d9ef>this</span>.&lt;count&gt;<span style=color:#ae81ff>5__1</span>++;
+</span></span><span style=display:flex><span>                    }
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>case</span> <span style=color:#ae81ff>1</span>:
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>goto</span> Label_004B;
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>false</span>;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span><span style=color:#a6e22e>
+</span></span></span><span style=display:flex><span><span style=color:#a6e22e>        [DebuggerHidden]</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>void</span> IEnumerator.Reset()
+</span></span><span style=display:flex><span>        {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> NotSupportedException();
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>void</span> IDisposable.Dispose()
+</span></span><span style=display:flex><span>        {
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>object</span> IEnumerator&lt;<span style=color:#66d9ef>object</span>&gt;.Current
+</span></span><span style=display:flex><span>        {
+</span></span><span style=display:flex><span><span style=color:#a6e22e>            [DebuggerHidden]</span>
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>get</span>
+</span></span><span style=display:flex><span>            {
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>2__</span>current;
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>object</span> IEnumerator.Current
+</span></span><span style=display:flex><span>        {
+</span></span><span style=display:flex><span><span style=color:#a6e22e>            [DebuggerHidden]</span>
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>get</span>
+</span></span><span style=display:flex><span>            {
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>2__</span>current;
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}</span></span></code></pre></div><p>我们将从较高层次开始了解发生了什么，解释每个成员。真正的工作是在 <code>MoveNext()</code> 中完成的，所以我们先略过这一部分，当我们对代码的其他部分满意后，再深入探讨这个方法。从上到下查看代码，以下是连续注释：</p><ol><li>上面显示的源代码不是完全有效的 C#——它使用了在普通 C# 中非法的名称。在生成的代码中使用非法名称是很常见的；这可以防止与普通名称发生任何冲突，同时阻止手动编写的 C# 显式使用生成的代码。</li><li>调用 <code>GetCounter()</code> 只是调用 <code>&lt;GetCounter>d__0</code> 的构造函数，这是实现迭代器的类型。构造函数又只是设置迭代器的状态。我们原始类中的任何代码都尚未执行。</li><li>代码的各种元素都装饰有 <code>CompilerGenerated</code> 和 <code>DebuggerHidden</code> 属性。<code>CompilerGenerated</code> 几乎无关紧要——其 MSDN 文档提到它允许 SQL Server 额外访问，但 99.9% 的开发者真的不需要知道这一点。但为了清晰起见，看到它在那里还是很好的。<code>DebuggerHidden</code> 只是阻止调试器（那些选择遵循此属性的调试器）进入或在代码中中断。从现在开始，我不再展示这些属性。</li><li><code>&lt;GetCounter>d__0</code>（以下简称“迭代器类型”）实现了三个接口：<code>IEnumerator&lt;object></code>、<code>IEnumerator</code> 和 <code>IDisposable</code>。实际上，第一个接口已经隐含了其他两个，但我在列表中保留了它们以使内容更清晰。有趣的是，即使我们原始的 <code>GetCounter()</code> 方法使用了非泛型形式，也实现了泛型接口。这可能只是为了保持一致性——我们将看到，当我们告诉编译器使用泛型版本时，变化非常小。</li><li>实现 <code>IDisposable</code> 非常重要（除了为实现 <code>IEnumerator&lt;object></code> 所必需之外）。C# 中的 <code>foreach</code> 语句会调用任何实现了 <code>IDisposable</code> 的迭代器上的 <code>Dispose</code>；调用位于 <code>finally</code> 块中，就像 <code>using</code> 语句一样。在极少数情况下，你手动使用迭代器而不是使用 <code>foreach</code> 循环时，应使用 <code>using</code> 语句以确保调用 <code>Dispose</code>。我们稍后会看到原因。</li><li>迭代器类型是嵌套的，这意味着它可以访问封闭类的所有私有成员。如果你的迭代器块调用其他私有方法或访问私有变量（当然或其他私有成员），这一点很重要。我们稍后会看到这方面的示例。</li><li>迭代器类型有三个字段——两个私有和一个公有。两个私有变量跟踪要从 <code>Current</code> 属性返回的值以及迭代器所处的状态。我们稍后将更详细地研究这些。老实说，我不知道为什么与 <code>count</code> 关联的变量是公有的。当我们查看如果原始的迭代器块方法接受参数会发生什么时，我们将看到公有字段的使用——尽管不同的设计决策可能使所有内容保持私有。</li><li>构造函数只设置迭代器的状态。在这种情况下，唯一调用构造函数的代码是 <code>GetCounter()</code> 方法，它总是传递 0 作为初始状态，但我们稍后将看到，在其他情况下，将状态作为参数传递是有真正原因的。</li><li><code>MoveNext()</code> 基本上只是一个大的 <code>switch</code> 语句。它总是这样，并且它切换的值是状态机中的一个状态，因此它知道接下来要执行哪部分代码。我们将花很多时间研究这一点。</li><li><code>IEnumerator</code> 中的 <code>Reset</code> 方法总是抛出 <code>System.NotSupportedException</code>。这不仅仅是一个实现决策——它是 C# 规范强制要求的。</li><li>在第一个简单示例中，<code>Dispose</code> 方法什么也不做。我们将以此作为一个单独的主题进行探讨。</li><li><code>IEnumerator</code> 和 <code>IEnumerator&lt;object></code> 的 <code>Current</code> 实现都只是返回 <code>&lt;>2__current</code> 变量的值。C# 语言规范明确规定了在“奇怪”情况下（例如在第一次调用 <code>MoveNext()</code> 之前访问它，或当 <code>MoveNext()</code> 已返回 <code>false</code> 时）<code>Current</code> 属性的行为是未定义的。</li></ol><h1 id=泛型与非泛型接口>泛型与非泛型接口<a class=anchor href=#%e6%b3%9b%e5%9e%8b%e4%b8%8e%e9%9d%9e%e6%b3%9b%e5%9e%8b%e6%8e%a5%e5%8f%a3>#</a></h1><p>我们已经看到了声明一个返回 <code>IEnumerator</code> 的方法如何导致迭代器同时实现 <code>IEnumerator&lt;object></code>。现在让我们稍微更改一下代码，使方法显式返回 <code>IEnumerator&lt;int></code>：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-csharp data-lang=csharp><span style=display:flex><span><span style=color:#66d9ef>using</span> System;
+</span></span><span style=display:flex><span><span style=color:#66d9ef>using</span> System.Collections.Generic;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Test</span>
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>static</span> IEnumerator&lt;<span style=color:#66d9ef>int</span>&gt; GetCounter()
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>for</span> (<span style=color:#66d9ef>int</span> count = <span style=color:#ae81ff>0</span>; count &lt; <span style=color:#ae81ff>10</span>; count++)
+</span></span><span style=display:flex><span>        {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>yield</span> <span style=color:#66d9ef>return</span> count;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}</span></span></code></pre></div><p>我不会完整发布生成的代码，但以下是一些更改。首先，也是最明显的，<code>GetCounter()</code> 方法更改了返回类型，但其他都没有改变：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-csharp data-lang=csharp><span style=display:flex><span><span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> IEnumerator&lt;<span style=color:#66d9ef>int</span>&gt; GetCounter()
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> &lt;GetCounter&gt;d__0(<span style=color:#ae81ff>0</span>);
+</span></span><span style=display:flex><span>}</span></span></code></pre></div><p>同样，迭代器现在实现 <code>IEnumerator&lt;int></code> 而不是 <code>IEnumerator&lt;object></code>。这里涉及的类型称为迭代器的<strong>产出类型</strong>。每个 <code>yield return</code> 语句都必须返回可以隐式转换为产出类型的值。正如我们所见，当使用非泛型接口时，产出类型是 <code>object</code>。以下是新的类签名：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-csharp data-lang=csharp><span style=display:flex><span><span style=color:#66d9ef>private</span> <span style=color:#66d9ef>sealed</span> <span style=color:#66d9ef>class</span> &lt;GetCounter&gt;d__0 : IEnumerator&lt;<span style=color:#66d9ef>int</span>&gt;, IEnumerator, IDisposable</span></span></code></pre></div><p>类似地，实现泛型接口的 <code>Current</code> 属性和后备变量更改为 <code>int</code>：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-csharp data-lang=csharp><span style=display:flex><span><span style=color:#66d9ef>private</span> <span style=color:#66d9ef>int</span> &lt;&gt;<span style=color:#ae81ff>2__</span>current;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>int</span> IEnumerator&lt;<span style=color:#66d9ef>int</span>&gt;.Current
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>get</span>
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>2__</span>current;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}</span></span></code></pre></div><p>除了这些微小的更改之外，该类看起来与之前相同。</p><h1 id=返回-ienumerable>返回 IEnumerable<a class=anchor href=#%e8%bf%94%e5%9b%9e-ienumerable>#</a></h1><p>如果我们将原始代码更改为返回 <code>IEnumerable</code> 或其泛型对应物，而不是 <code>IEnumerator</code>，会有更显著的变化。我们将代码更改为返回 <code>IEnumerable&lt;int></code> 并从现在开始坚持使用泛型接口，因为我们看到它们几乎没有区别。那么，以下是源代码：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-csharp data-lang=csharp><span style=display:flex><span><span style=color:#66d9ef>using</span> System;
+</span></span><span style=display:flex><span><span style=color:#66d9ef>using</span> System.Collections.Generic;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Test</span>
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>static</span> IEnumerable&lt;<span style=color:#66d9ef>int</span>&gt; GetCounter()
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>for</span> (<span style=color:#66d9ef>int</span> count = <span style=color:#ae81ff>0</span>; count &lt; <span style=color:#ae81ff>10</span>; count++)
+</span></span><span style=display:flex><span>        {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>yield</span> <span style=color:#66d9ef>return</span> count;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}</span></span></code></pre></div><p>……以及生成的代码（为简洁起见，去除了属性）：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-csharp data-lang=csharp><span style=display:flex><span><span style=color:#66d9ef>internal</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Test</span>
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> IEnumerable&lt;<span style=color:#66d9ef>int</span>&gt; GetCounter()
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> &lt;GetCounter&gt;d__0(-<span style=color:#ae81ff>2</span>);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>sealed</span> <span style=color:#66d9ef>class</span> &lt;GetCounter&gt;d__0 : IEnumerable&lt;<span style=color:#66d9ef>int</span>&gt;, IEnumerable, IEnumerator&lt;<span style=color:#66d9ef>int</span>&gt;, IEnumerator, IDisposable
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// 字段</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>int</span> &lt;&gt;<span style=color:#ae81ff>1__</span>state;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>int</span> &lt;&gt;<span style=color:#ae81ff>2__</span>current;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>int</span> &lt;&gt;l__initialThreadId;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>int</span> &lt;count&gt;<span style=color:#ae81ff>5__1</span>;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>public</span> &lt;GetCounter&gt;d__0(<span style=color:#66d9ef>int</span> &lt;&gt;<span style=color:#ae81ff>1__</span>state)
+</span></span><span style=display:flex><span>        {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = &lt;&gt;<span style=color:#ae81ff>1__</span>state;
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>this</span>.&lt;&gt;l__initialThreadId = Thread.CurrentThread.ManagedThreadId;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>bool</span> MoveNext()
+</span></span><span style=display:flex><span>        {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>switch</span> (<span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state)
+</span></span><span style=display:flex><span>            {
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>case</span> <span style=color:#ae81ff>0</span>:
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = -<span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>this</span>.&lt;count&gt;<span style=color:#ae81ff>5__1</span> = <span style=color:#ae81ff>0</span>;
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>while</span> (<span style=color:#66d9ef>this</span>.&lt;count&gt;<span style=color:#ae81ff>5__1</span> &lt; <span style=color:#ae81ff>10</span>)
+</span></span><span style=display:flex><span>                    {
+</span></span><span style=display:flex><span>                        <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>2__</span>current = <span style=color:#66d9ef>this</span>.&lt;count&gt;<span style=color:#ae81ff>5__1</span>;
+</span></span><span style=display:flex><span>                        <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = <span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>                        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span>;
+</span></span><span style=display:flex><span>                    Label_0046:
+</span></span><span style=display:flex><span>                        <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = -<span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>                        <span style=color:#66d9ef>this</span>.&lt;count&gt;<span style=color:#ae81ff>5__1</span>++;
+</span></span><span style=display:flex><span>                    }
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>case</span> <span style=color:#ae81ff>1</span>:
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>goto</span> Label_0046;
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>false</span>;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        IEnumerator&lt;<span style=color:#66d9ef>int</span>&gt; IEnumerable&lt;<span style=color:#66d9ef>int</span>&gt;.GetEnumerator()
+</span></span><span style=display:flex><span>        {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>if</span> ((Thread.CurrentThread.ManagedThreadId == <span style=color:#66d9ef>this</span>.&lt;&gt;l__initialThreadId) &amp;&amp; (<span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state == -<span style=color:#ae81ff>2</span>))
+</span></span><span style=display:flex><span>            {
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = <span style=color:#ae81ff>0</span>;
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>this</span>;
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> Test.&lt;GetCounter&gt;d__0(<span style=color:#ae81ff>0</span>);
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        IEnumerator IEnumerable.GetEnumerator()
+</span></span><span style=display:flex><span>        {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> ((IEnumerable&lt;Int32&gt;) <span style=color:#66d9ef>this</span>).GetEnumerator();
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>void</span> IEnumerator.Reset()
+</span></span><span style=display:flex><span>        {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> NotSupportedException();
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>void</span> IDisposable.Dispose()
+</span></span><span style=display:flex><span>        {
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>int</span> IEnumerator&lt;<span style=color:#66d9ef>int</span>&gt;.Current
+</span></span><span style=display:flex><span>        {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>get</span>
+</span></span><span style=display:flex><span>            {
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>2__</span>current;
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>object</span> IEnumerator.Current
+</span></span><span style=display:flex><span>        {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>get</span>
+</span></span><span style=display:flex><span>            {
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>2__</span>current;
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}</span></span></code></pre></div><p>我再次展示了整个代码，以便我们可以轻松地看到差异：</p><ol><li>显然，迭代器类型现在实现了 <code>IEnumerable&lt;int></code>，但它仍然实现了 <code>IEnumerator&lt;int></code>。同时是可迭代对象和迭代器是非常奇怪的。这是对常见情况的优化，我们稍后会看到。</li><li><code>IEnumerator&lt;int></code> 的实现完全保持不变——<code>Reset</code> 仍然抛出异常，<code>Current</code> 仍然只返回当前值，<code>MoveNext()</code> 中的逻辑也相同。</li><li>创建迭代器实例的方法向构造函数传递初始状态 -2 而不是 0。</li><li>我们有一个额外的私有变量 <code>&lt;>l__initialThreadId</code>，它在构造函数中设置为反映创建实例的线程。</li><li><code>GetEnumerator()</code> 要么将状态设置为 0 并返回 <code>this</code>，要么创建一个新的迭代器实例，该实例从状态 0 开始。</li></ol><p>那么，这是怎么回事呢？嗯，最常见的使用情况（到目前为止）是创建一个 <code>IEnumerable&lt;T></code> 的实例，然后某些东西（如 <code>foreach</code> 语句）从同一线程调用 <code>GetEnumerator()</code>，遍历数据，并在最后处理掉 <code>IEnumerator&lt;T></code>。原始的 <code>IEnumerable&lt;T></code> 在初始调用 <code>IEnumerator&lt;T></code> 之后永远不会再被使用。考虑到这种模式的普遍性，C# 编译器选择一种优化这种情况的模式是有道理的。当是这种行为时，即使我们使用它来实现两个不同的实例，我们也只创建一个对象。状态 -2 用于表示“尚未调用 <code>GetEnumerator()</code>”，而状态 0 用于表示“我准备开始迭代，尽管 <code>MoveNext()</code> 尚未被调用”。</p><p>但是，如果你尝试从不同线程调用 <code>GetEnumerator()</code>，或者当它不处于 -2 状态时，代码必须创建一个新实例以跟踪不同的状态。在后一种情况下，你基本上有两个独立的计数器，因此它们需要独立的数据存储。<code>GetEnumerator()</code> 处理新迭代器的初始化，然后返回它准备行动。线程安全方面是为了防止两个独立的线程同时独立调用 <code>GetEnumerator()</code>，并最终得到相同的迭代器（即 <code>this</code>）。</p><p>这就是实现 <code>IEnumerable&lt;T></code> 时的基本模式：编译器在同一个类中实现所有接口，并且代码在必须时惰性地创建额外的迭代器。我们将看到，当涉及参数时，还有更多工作要做，但基本原则是相同的。</p><h1 id=选择返回的接口>选择返回的接口<a class=anchor href=#%e9%80%89%e6%8b%a9%e8%bf%94%e5%9b%9e%e7%9a%84%e6%8e%a5%e5%8f%a3>#</a></h1><p>通常，<code>IEnumerable&lt;T></code> 是返回的最灵活的接口。如果你的迭代器块不改变任何内容，并且你的类本身没有实现 <code>IEnumerable&lt;T></code>（当然，在这种情况下，你必须从 <code>GetEnumerator()</code> 方法返回 <code>IEnumerator&lt;T></code>），这是一个不错的选择。它允许客户端使用 <code>foreach</code>、多次迭代、使用 LINQ to Objects 以及获得普遍的好处。绝对值得使用泛型接口而不是非泛型接口。从现在开始，我将在文本中仅提及非泛型接口，但每次我都指两种形式（换句话说，<code>IEnumerable</code> 和 <code>IEnumerator</code> 之间存在重要区别，但从这一点开始，我不会区分 <code>IEnumerable</code> 和 <code>IEnumerable&lt;T></code>）。</p><h1 id=状态管理>状态管理<a class=anchor href=#%e7%8a%b6%e6%80%81%e7%ae%a1%e7%90%86>#</a></h1><p>迭代器类型需要跟踪多达 x 种状态：</p><ol><li>它的“虚拟指令指针”（即它到达的位置）</li><li>局部变量</li><li>参数初始值和 <code>this</code></li><li>创建线程（如上所示，并且仅在 <code>IEnumerable</code> 的情况下；我不会进一步讨论这个）</li><li>最后产出的值（即 <code>Current</code>；这足够简单，不需要单独关注）</li></ol><p>我们将依次查看前三个。</p><h1 id=跟踪我们到达的位置>跟踪我们到达的位置<a class=anchor href=#%e8%b7%9f%e8%b8%aa%e6%88%91%e4%bb%ac%e5%88%b0%e8%be%be%e7%9a%84%e4%bd%8d%e7%bd%ae>#</a></h1><p>我们状态机中的第一个状态是跟踪我们从原始源代码中执行了多少代码。如果你想到一个正常的状态机图（有圆圈和线条），这就是我们当前所处的圆圈。在许多情况下，它只被称为状态——确实在我们迄今为止的示例反编译输出中，我们已将其视为 <code>&lt;>1__state</code>。（这是不幸的，因为所有其余的数据也是状态，但没关系……）规范提到了之前、运行、暂停和之后的状态，但正如我们将看到的，暂停需要更多细节——并且我们需要一个额外的状态用于 <code>IEnumerable</code> 实现。</p><p>在我继续之前，值得记住的是，迭代器块并不仅仅从开始运行到结束。当最初调用方法时，只创建迭代器。只有当调用 <code>MoveNext()</code> 时（如果我们使用 <code>IEnumerable</code>，则在调用 <code>GetEnumerator()</code> 之后），才开始执行。此时，执行像往常一样从方法的顶部开始，并一直进行到第一个 <code>yield return</code> 或 <code>yield break</code> 语句，或方法的结尾。此时，返回一个布尔值以指示块是否已完成迭代。如果/当再次调用 <code>MoveNext()</code> 时，方法从紧接 <code>yield return</code> 语句之后继续执行。（如果之前的调用因任何其他原因结束，则我们已完成迭代，不会发生任何事情。）在不查看生成代码的情况下，让我们编写一个小程序来逐步执行一个简单的迭代器。以下是代码：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-csharp data-lang=csharp><span style=display:flex><span><span style=color:#66d9ef>using</span> System;
+</span></span><span style=display:flex><span><span style=color:#66d9ef>using</span> System.Collections.Generic;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Test</span>
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>readonly</span> <span style=color:#66d9ef>string</span> Padding = <span style=color:#66d9ef>new</span> <span style=color:#66d9ef>string</span>(<span style=color:#e6db74>&#39; &#39;</span>, <span style=color:#ae81ff>30</span>);
+</span></span><span style=display:flex><span>    
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>static</span> IEnumerator&lt;<span style=color:#66d9ef>int</span>&gt; GetNumbers()
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>        Console.WriteLine(Padding + <span style=color:#e6db74>&#34;First line of GetNumbers()&#34;</span>);
+</span></span><span style=display:flex><span>        Console.WriteLine(Padding + <span style=color:#e6db74>&#34;Just before yield return 0&#34;</span>);
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>yield</span> <span style=color:#66d9ef>return</span> <span style=color:#ae81ff>10</span>;
+</span></span><span style=display:flex><span>        Console.WriteLine(Padding + <span style=color:#e6db74>&#34;Just after yield return 0&#34;</span>);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        Console.WriteLine(Padding + <span style=color:#e6db74>&#34;Just before yield return 1&#34;</span>);
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>yield</span> <span style=color:#66d9ef>return</span> <span style=color:#ae81ff>20</span>;
+</span></span><span style=display:flex><span>        Console.WriteLine(Padding + <span style=color:#e6db74>&#34;Just after yield return 1&#34;</span>);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>void</span> Main()
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>        Console.WriteLine(<span style=color:#e6db74>&#34;Calling GetNumbers()&#34;</span>);
+</span></span><span style=display:flex><span>        IEnumerator&lt;<span style=color:#66d9ef>int</span>&gt; iterator = GetNumbers();
+</span></span><span style=display:flex><span>        Console.WriteLine(<span style=color:#e6db74>&#34;Calling MoveNext()...&#34;</span>);
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>bool</span> more = iterator.MoveNext();
+</span></span><span style=display:flex><span>        Console.WriteLine(<span style=color:#e6db74>&#34;Result={0}; Current={1}&#34;</span>, more, iterator.Current);
+</span></span><span style=display:flex><span>        
+</span></span><span style=display:flex><span>        Console.WriteLine(<span style=color:#e6db74>&#34;Calling MoveNext() again...&#34;</span>);
+</span></span><span style=display:flex><span>        more = iterator.MoveNext();
+</span></span><span style=display:flex><span>        Console.WriteLine(<span style=color:#e6db74>&#34;Result={0}; Current={1}&#34;</span>, more, iterator.Current);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        Console.WriteLine(<span style=color:#e6db74>&#34;Calling MoveNext() again...&#34;</span>);
+</span></span><span style=display:flex><span>        more = iterator.MoveNext();
+</span></span><span style=display:flex><span>        Console.WriteLine(<span style=color:#e6db74>&#34;Result={0} (stopping)&#34;</span>, more);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}</span></span></code></pre></div><p>我为迭代器块中创建的输出包含了一些填充，以使结果更清晰。左边的行在调用代码中；右边的行在迭代器块中：</p><pre tabindex=0><code>Calling GetNumbers()
+Calling MoveNext()...
+                              First line of GetNumbers()
+                              Just before yield return 0
+Result=True; Current=10
+Calling MoveNext() again...
+                              Just after yield return 0
+                              Just before yield return 1
+Result=True; Current=20
+Calling MoveNext() again...
+                              Just after yield return 1
+Result=False (stopping)</code></pre><p>现在让我们介绍 <code>&lt;>1__state</code> 可以取的值及其含义：</p><ul><li><strong>-2</strong>：（仅限 <code>IEnumerable</code>）在创建线程第一次调用 <code>GetEnumerator()</code> 之前</li><li><strong>-1</strong>：“运行中”——迭代器当前正在执行代码；也用于“之后”——迭代器已完成，无论是通过到达方法结尾还是通过遇到 <code>yield break</code></li><li><strong>0</strong>：“之前”——<code>MoveNext()</code> 尚未被调用</li><li><strong>任何正数</strong>：指示从哪里恢复；它已经产出了至少一个值，并且可能还有更多。当代码仍在运行但处于具有相应 <code>finally</code> 块的 <code>try</code> 块中时，也使用正数状态。我们稍后会看到原因。</li></ul><p>有趣的是，生成的代码并不区分“运行中”和“之后”。确实没有理由区分：如果你在迭代器处于该状态时调用 <code>MoveNext()</code>（可能是由于它在不同线程中运行），那么 <code>MoveNext()</code> 将立即返回 <code>false</code>。此状态也是我们在未捕获异常之后结束的状态。</p><p>现在我们知道状态的含义，让我们看看上述迭代器的 <code>MoveNext()</code> 是什么样子。它基本上是一个 <code>switch</code> 语句，根据状态从代码中的特定位置开始执行。对于 <code>MoveNext()</code> 来说总是这样，唯一的例外是迭代器主体仅由 <code>yield break</code> 组成。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-csharp data-lang=csharp><span style=display:flex><span><span style=color:#66d9ef>private</span> <span style=color:#66d9ef>bool</span> MoveNext()
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>switch</span> (<span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state)
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>case</span> <span style=color:#ae81ff>0</span>:
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = -<span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>            Console.WriteLine(Test.Padding + <span style=color:#e6db74>&#34;First line of GetNumbers()&#34;</span>);
+</span></span><span style=display:flex><span>            Console.WriteLine(Test.Padding + <span style=color:#e6db74>&#34;Just before yield return 0&#34;</span>);
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>2__</span>current = <span style=color:#ae81ff>10</span>;
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = <span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span>;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>case</span> <span style=color:#ae81ff>1</span>:
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = -<span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>            Console.WriteLine(Test.Padding + <span style=color:#e6db74>&#34;Just after yield return 0&#34;</span>);
+</span></span><span style=display:flex><span>            Console.WriteLine(Test.Padding + <span style=color:#e6db74>&#34;Just before yield return 1&#34;</span>);
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>2__</span>current = <span style=color:#ae81ff>20</span>;
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = <span style=color:#ae81ff>2</span>;
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span>;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>case</span> <span style=color:#ae81ff>2</span>:
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = -<span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>            Console.WriteLine(Test.Padding + <span style=color:#e6db74>&#34;Just after yield return 1&#34;</span>);
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>false</span>;
+</span></span><span style=display:flex><span>}</span></span></code></pre></div><p>这当然是一个非常简单的例子——我们只是从状态 0 开始，然后是 1，然后是 2，然后是 -1（尽管我们在每次执行代码时短暂地处于 -1 状态）。让我们再看一下我们的第一个例子。以下是原始代码：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-csharp data-lang=csharp><span style=display:flex><span><span style=color:#66d9ef>using</span> System;
+</span></span><span style=display:flex><span><span style=color:#66d9ef>using</span> System.Collections;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Test</span>
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>static</span> IEnumerator GetCounter()
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>for</span> (<span style=color:#66d9ef>int</span> count = <span style=color:#ae81ff>0</span>; count &lt; <span style=color:#ae81ff>10</span>; count++)
+</span></span><span style=display:flex><span>        {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>yield</span> <span style=color:#66d9ef>return</span> count;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}</span></span></code></pre></div><p>以下是 <code>MoveNext()</code> 方法，正如我们之前看到的：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-csharp data-lang=csharp><span style=display:flex><span><span style=color:#66d9ef>private</span> <span style=color:#66d9ef>bool</span> MoveNext()
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>switch</span> (<span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state)
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>case</span> <span style=color:#ae81ff>0</span>:
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = -<span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>this</span>.&lt;count&gt;<span style=color:#ae81ff>5__1</span> = <span style=color:#ae81ff>0</span>;
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>while</span> (<span style=color:#66d9ef>this</span>.&lt;count&gt;<span style=color:#ae81ff>5__1</span> &lt; <span style=color:#ae81ff>10</span>)
+</span></span><span style=display:flex><span>            {
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>2__</span>current = <span style=color:#66d9ef>this</span>.&lt;count&gt;<span style=color:#ae81ff>5__1</span>;
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = <span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span>;
+</span></span><span style=display:flex><span>            Label_004B:
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = -<span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>this</span>.&lt;count&gt;<span style=color:#ae81ff>5__1</span>++;
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>         <span style=color:#66d9ef>case</span> <span style=color:#ae81ff>1</span>:
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>goto</span> Label_004B;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>false</span>;
+</span></span><span style=display:flex><span>}</span></span></code></pre></div><p>是的，它使用 <code>goto</code> 语句从一个 <code>case</code> 跳到另一个 <code>case</code> 的一半处。哎呀。但别忘了这只是生成的代码。当你仔细想想，<code>for</code> 循环和 <code>while</code> 循环实际上只是比较和跳转的良好包装。我们并不真正关心这段代码在可读性方面有多糟糕，只要它工作并且性能良好。C# 编译器团队实现这两个目标的最简单方法是使用 <code>switch</code> 和 <code>goto</code> 对其进行建模。</p><p>我不打算解释所有不同的转换是如何发生的。稍后我将研究 <code>finally</code> 块的处理，有趣的是，你不能从具有 <code>catch</code> 块的 <code>try</code> 块中，或从任何 <code>catch</code> 或 <code>finally</code> 块中 <code>yield</code>（无论是返回还是中断）。重要的是，你可以从只有 <code>finally</code> 块的 <code>try</code> 块中 <code>yield</code>。这意味着你仍然可以使用 <code>using</code> 语句，这确实非常方便。尝试用不同的方式使代码分支和循环，然后查看生成的 <code>MoveNext()</code> 方法发生了什么变化是相当有趣的。然而，我无法详尽地做到这一点，而你可以非常轻松地进行实验。上面的简单示例展示了原理以及涉及的状态。让我们继续下一部分状态。</p><h1 id=本地变量><strong>本地变量</strong><a class=anchor href=#%e6%9c%ac%e5%9c%b0%e5%8f%98%e9%87%8f>#</a></h1><p>在迭代器块中，常规的局部变量处理起来非常简单。它们会成为迭代器类型中的实例变量，并且其赋值（以及赋值时机）与在常规代码中的初始化方式相同。当然，由于它们是实例变量，就不再存在“明确赋值”这一有意义的说法，但常规的编译规则会阻止你看到它们的默认值（除非你故意使用反射来干扰上述状态）。所有这些都可以在前面 <code>&lt;count>5__1</code> 变量的示例中看到。</p><p>局部变量的特性意味着，创建迭代器实例不需要关于变量本身的任何额外信息——任何初始值都将在代码执行过程中设置。当然，这个初始值可能会依赖于非本地变量，这就引出了最后一种状态类型。</p><h1 id=参数与-this><strong>参数与 this</strong><a class=anchor href=#%e5%8f%82%e6%95%b0%e4%b8%8e-this>#</a></h1><p>使用迭代器块实现的方法可以接收参数，并且如果它们是实例方法，也可以使用 <code>this</code>。任何对包含迭代器块的类型的实例变量的引用，本质上就是使用 <code>this</code>，然后从该引用定位到变量。下面是一个同时包含方法参数（<code>max</code>）和对实例变量（<code>min</code>）引用的例子——我对实例变量加了 <code>this.</code> 前缀以便更清晰。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c# data-lang=c#><span style=display:flex><span><span style=color:#66d9ef>using</span> System;
+</span></span><span style=display:flex><span><span style=color:#66d9ef>using</span> System.Collections.Generic;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Test</span>
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>int</span> min;
+</span></span><span style=display:flex><span>    
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> Test(<span style=color:#66d9ef>int</span> min)
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.min = min;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> IEnumerator&lt;<span style=color:#66d9ef>int</span>&gt; GetCounter(<span style=color:#66d9ef>int</span> max)
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>for</span> (<span style=color:#66d9ef>int</span> count = <span style=color:#66d9ef>this</span>.min; count &lt; max; count++)
+</span></span><span style=display:flex><span>        {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>yield</span> <span style=color:#66d9ef>return</span> count;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}</span></span></code></pre></div><p>请注意，它返回的是 <code>IEnumerator&lt;int></code> 而不是 <code>IEnumerable&lt;int></code>。正如我们很快就会看到的，在使用参数和 <code>this</code> 时，这会产生更大的差异。以下是生成代码中的有趣部分：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c# data-lang=c#><span style=display:flex><span><span style=color:#66d9ef>internal</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Test</span>
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>int</span> min;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> Test(<span style=color:#66d9ef>int</span> min)
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.min = min;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> IEnumerator&lt;<span style=color:#66d9ef>int</span>&gt; GetCounter(<span style=color:#66d9ef>int</span> max)
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>        &lt;GetCounter&gt;d__0 d__ = <span style=color:#66d9ef>new</span> &lt;GetCounter&gt;d__0(<span style=color:#ae81ff>0</span>);
+</span></span><span style=display:flex><span>        d__.&lt;&gt;<span style=color:#ae81ff>4__</span><span style=color:#66d9ef>this</span> = <span style=color:#66d9ef>this</span>;
+</span></span><span style=display:flex><span>        d__.max = max;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> d__;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>sealed</span> <span style=color:#66d9ef>class</span> &lt;GetCounter&gt;d__0 : IEnumerator&lt;<span style=color:#66d9ef>int</span>&gt;, IEnumerator, IDisposable
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>int</span> &lt;&gt;<span style=color:#ae81ff>1__</span>state;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>int</span> &lt;&gt;<span style=color:#ae81ff>2__</span>current;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>public</span> Test &lt;&gt;<span style=color:#ae81ff>4__</span><span style=color:#66d9ef>this</span>;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>int</span> &lt;count&gt;<span style=color:#ae81ff>5__1</span>;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>int</span> max;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>public</span> &lt;GetCounter&gt;d__0(<span style=color:#66d9ef>int</span> &lt;&gt;<span style=color:#ae81ff>1__</span>state)
+</span></span><span style=display:flex><span>        {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = &lt;&gt;<span style=color:#ae81ff>1__</span>state;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>bool</span> MoveNext()
+</span></span><span style=display:flex><span>        {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>switch</span> (<span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state)
+</span></span><span style=display:flex><span>            {
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>case</span> <span style=color:#ae81ff>0</span>:
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = -<span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>this</span>.&lt;count&gt;<span style=color:#ae81ff>5__1</span> = <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>4__</span><span style=color:#66d9ef>this</span>.min;
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>while</span> (<span style=color:#66d9ef>this</span>.&lt;count&gt;<span style=color:#ae81ff>5__1</span> &lt; <span style=color:#66d9ef>this</span>.max)
+</span></span><span style=display:flex><span>                    {
+</span></span><span style=display:flex><span>                        <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>2__</span>current = <span style=color:#66d9ef>this</span>.&lt;count&gt;<span style=color:#ae81ff>5__1</span>;
+</span></span><span style=display:flex><span>                        <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = <span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>                        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span>;
+</span></span><span style=display:flex><span>                    Label_0050:
+</span></span><span style=display:flex><span>                        <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = -<span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>                        <span style=color:#66d9ef>this</span>.&lt;count&gt;<span style=color:#ae81ff>5__1</span>++;
+</span></span><span style=display:flex><span>                    }
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>case</span> <span style=color:#ae81ff>1</span>:
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>goto</span> Label_0050;
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>false</span>;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// Other methods as normal</span>
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}</span></span></code></pre></div><p>我们在迭代器中增加了两个额外的字段。一个就叫 <code>max</code>，另一个是 <code>&lt;>4__this</code>。在原始代码访问 <code>min</code> 的地方，生成的代码访问 <code>&lt;>4__this.min</code>——尽管 <code>Test.min</code> 是私有的，但由于这是在一个嵌套类型中，所以可以这样访问。</p><p>有趣且（在我看来）有些违反直觉的部分是这些额外字段的初始化方式。个人而言，我会将它们作为构造函数的参数添加进去，使它们都成为私有的，并且 <code>&lt;>4__this</code> 也是只读的。C# 团队的 Eric Lippert 解释过，负责此部分的代码与从闭包中提升捕获变量的代码是同一份——而那些变量确实需要是公共的，以便原始方法仍然可以访问它们。所以，基本上这是一个代码重用问题，而不是有什么隐蔽的原因导致我偏好的方式无法实现。这里并没有真正的危害，但我发现这类事情很迷人 :)</p><p>碰巧，我们的迭代器块没有改变 <code>max</code> 的值——但它是可以改变的。现在假设我们要返回 <code>IEnumerable</code> 而不是 <code>IEnumerator</code>。考虑到我们希望每次调用 <code>GetEnumerator()</code> 生成的迭代器都使用 <code>max</code> 的原始值，编译器是如何确保这一点的呢？以下是生成代码的有趣部分子集（源代码与之前相同，只是返回类型改变了）。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c# data-lang=c#><span style=display:flex><span><span style=color:#66d9ef>internal</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Test</span>
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>int</span> min;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> IEnumerable&lt;<span style=color:#66d9ef>int</span>&gt; GetCounter(<span style=color:#66d9ef>int</span> max)
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>        &lt;GetCounter&gt;d__0 d__ = <span style=color:#66d9ef>new</span> &lt;GetCounter&gt;d__0(-<span style=color:#ae81ff>2</span>);
+</span></span><span style=display:flex><span>        d__.&lt;&gt;<span style=color:#ae81ff>4__</span><span style=color:#66d9ef>this</span> = <span style=color:#66d9ef>this</span>;
+</span></span><span style=display:flex><span>        d__.&lt;&gt;<span style=color:#ae81ff>3__</span>max = max;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> d__;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>sealed</span> <span style=color:#66d9ef>class</span> &lt;GetCounter&gt;d__0 : IEnumerable&lt;<span style=color:#66d9ef>int</span>&gt;, IEnumerable, IEnumerator&lt;<span style=color:#66d9ef>int</span>&gt;, IEnumerator, IDisposable
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>int</span> &lt;&gt;<span style=color:#ae81ff>1__</span>state;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>int</span> &lt;&gt;<span style=color:#ae81ff>2__</span>current;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>int</span> &lt;&gt;<span style=color:#ae81ff>3__</span>max;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>public</span> Test &lt;&gt;<span style=color:#ae81ff>4__</span><span style=color:#66d9ef>this</span>;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>int</span> &lt;&gt;l__initialThreadId;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>int</span> &lt;count&gt;<span style=color:#ae81ff>5__1</span>;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>int</span> max;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>public</span> &lt;GetCounter&gt;d__0(<span style=color:#66d9ef>int</span> &lt;&gt;<span style=color:#ae81ff>1__</span>state)
+</span></span><span style=display:flex><span>        {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = &lt;&gt;<span style=color:#ae81ff>1__</span>state;
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>this</span>.&lt;&gt;l__initialThreadId = Thread.CurrentThread.ManagedThreadId;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>bool</span> MoveNext()
+</span></span><span style=display:flex><span>        {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>switch</span> (<span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state)
+</span></span><span style=display:flex><span>            {
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>case</span> <span style=color:#ae81ff>0</span>:
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = -<span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>this</span>.&lt;count&gt;<span style=color:#ae81ff>5__1</span> = <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>4__</span><span style=color:#66d9ef>this</span>.min;
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>while</span> (<span style=color:#66d9ef>this</span>.&lt;count&gt;<span style=color:#ae81ff>5__1</span> &lt; <span style=color:#66d9ef>this</span>.max)
+</span></span><span style=display:flex><span>                    {
+</span></span><span style=display:flex><span>                        <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>2__</span>current = <span style=color:#66d9ef>this</span>.&lt;count&gt;<span style=color:#ae81ff>5__1</span>;
+</span></span><span style=display:flex><span>                        <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = <span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>                        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span>;
+</span></span><span style=display:flex><span>                    Label_0050:
+</span></span><span style=display:flex><span>                        <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = -<span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>                        <span style=color:#66d9ef>this</span>.&lt;count&gt;<span style=color:#ae81ff>5__1</span>++;
+</span></span><span style=display:flex><span>                    }
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>case</span> <span style=color:#ae81ff>1</span>:
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>goto</span> Label_0050;
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>false</span>;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        IEnumerator&lt;<span style=color:#66d9ef>int</span>&gt; IEnumerable&lt;<span style=color:#66d9ef>int</span>&gt;.GetEnumerator()
+</span></span><span style=display:flex><span>        {
+</span></span><span style=display:flex><span>            Test.&lt;GetCounter&gt;d__0 d__;
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>if</span> ((Thread.CurrentThread.ManagedThreadId == <span style=color:#66d9ef>this</span>.&lt;&gt;l__initialThreadId) &amp;&amp; (<span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state == -<span style=color:#ae81ff>2</span>))
+</span></span><span style=display:flex><span>            {
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = <span style=color:#ae81ff>0</span>;
+</span></span><span style=display:flex><span>                d__ = <span style=color:#66d9ef>this</span>;
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>else</span>
+</span></span><span style=display:flex><span>            {
+</span></span><span style=display:flex><span>                d__ = <span style=color:#66d9ef>new</span> Test.&lt;GetCounter&gt;d__0(<span style=color:#ae81ff>0</span>);
+</span></span><span style=display:flex><span>                d__.&lt;&gt;<span style=color:#ae81ff>4__</span><span style=color:#66d9ef>this</span> = <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>4__</span><span style=color:#66d9ef>this</span>;
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>            d__.max = <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>3__</span>max;
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> d__;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}</span></span></code></pre></div><p>现在我们又多了一个额外的字段（<code>&lt;>3__max</code>）来表示 <code>max</code> 参数的原始值。每当我们开始将一个实例用作 <code>IEnumerator</code> 时（即状态变为 0，无论是否在构造时），我们都用那个值初始化 <code>max</code> 字段。注意，我们不需要为 <code>&lt;>4__this</code> 设置额外的字段，因为 <code>this</code> 对于引用类型是只读的，所以原始代码不可能更改它。（但在结构体中使用且引用了 <code>this</code> 的迭代器块，确实会有一个额外的字段来存储 <code>this</code> 的初始值，因为迭代器块代码可能会更改它。）</p><p>可以说，编译器可以检查是否没有任何东西改变参数的值，从而避免复制，但我怀疑这付出的努力可能得不偿失，并且会遇到奇怪的边界情况。当前的系统允许你以各种奇妙的方式改变参数值，而不会对从同一个 <code>IEnumerable</code> 实例创建的任何其他迭代器造成问题。</p><p>这就涵盖了我们需要跟踪的所有状态，但还有一个问题需要处理：finally 块。</p><p><strong>还有 finally&mldr;</strong></p><p>迭代器带来了一个棘手的问题。与整个方法在执行完毕前栈帧才被弹出不同，每次产生一个值时，执行实际上是暂停的。无法保证调用者会以任何方式、形态或形式再次使用迭代器。如果你需要在某个值产生之后执行一些代码，那就麻烦了：你不能保证这会发生。长话短说，在 finally 块中的代码，通常几乎在所有情况下离开方法前都会被执行，但现在就没那么可靠了。</p><p>值得记住的是，代码中的大多数 finally 块并不是在 C# 中显式编写的——它们是编译器作为 <code>lock</code> 和 <code>using</code> 语句的一部分生成的。<code>lock</code> 在迭代器块中尤其危险——任何时候，只要你在 <code>lock</code> 块内有一个 <code>yield return</code> 语句，你就有一个等待发生的线程问题。即使已经产生了下一个值，你的代码仍会持有锁——谁知道客户端要过多久才会调用 <code>MoveNext()</code> 或 <code>Dispose()</code>？同样，任何用于关键事务（如安全性）的 <code>try/finally</code> 块也不应出现在迭代器块中：如果客户端不再需要更多的值，他们可以故意阻止 finally 块的执行。</p><p>不过，状态机的构建确保了当迭代器被正确使用时，finally 块会被执行。这是因为 <code>IEnumerator&lt;T></code> 实现了 <code>IDisposable</code>，并且 C# 的 <code>foreach</code> 循环会调用迭代器的 <code>Dispose</code>（即使是那些实现了 <code>IDisposable</code> 的非泛型 <code>IEnumerator</code>）。生成的迭代器中的 <code>IDisposable</code> 实现会根据当前位置（总是基于状态）计算出哪些 finally 块是相关的，并执行适当的代码。</p><p>这次我不会给出另一个不切实际的例子，而是展示我最喜欢的迭代器块的用途之一。这样一个简单的类，但真的很方便。它让你可以遍历文本文件（或任何其他 <code>TextReader</code>），并在迭代器完成或被释放时关闭读取器。在 MiscUtil 中有一个功能稍全的版本，但只是就构造实例的方式而言。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c# data-lang=c#><span style=display:flex><span><span style=color:#66d9ef>using</span> System;
+</span></span><span style=display:flex><span><span style=color:#66d9ef>using</span> System.Collections;
+</span></span><span style=display:flex><span><span style=color:#66d9ef>using</span> System.Collections.Generic;
+</span></span><span style=display:flex><span><span style=color:#66d9ef>using</span> System.IO;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>sealed</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>LineReader</span> : IEnumerable&lt;<span style=color:#66d9ef>string</span>&gt;
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>readonly</span> Func&lt;TextReader&gt; dataSource;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> LineReader(<span style=color:#66d9ef>string</span> filename)
+</span></span><span style=display:flex><span>        : <span style=color:#66d9ef>this</span>(() =&gt; File.OpenText(filename))
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> LineReader(Func&lt;TextReader&gt; dataSource)
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.dataSource = dataSource;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> IEnumerator&lt;<span style=color:#66d9ef>string</span>&gt; GetEnumerator()
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>using</span> (TextReader reader = dataSource())
+</span></span><span style=display:flex><span>        {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>string</span> line;
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>while</span> ((line = reader.ReadLine()) != <span style=color:#66d9ef>null</span>)
+</span></span><span style=display:flex><span>            {
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>yield</span> <span style=color:#66d9ef>return</span> line;
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    IEnumerator IEnumerable.GetEnumerator()
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> GetEnumerator();
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}</span></span></code></pre></div><p>有了 <code>LineReader</code>，逐行转储文本文件就变得如此简单：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c# data-lang=c#><span style=display:flex><span><span style=color:#66d9ef>foreach</span> (<span style=color:#66d9ef>string</span> line <span style=color:#66d9ef>in</span> <span style=color:#66d9ef>new</span> LineReader(filename))
+</span></span><span style=display:flex><span>  {
+</span></span><span style=display:flex><span>      Console.WriteLine(line);
+</span></span><span style=display:flex><span>  }</span></span></code></pre></div><p>此外，你可以使用 LINQ 标准查询操作符进行过滤、投影等操作。然而，重要的是在我们完成迭代后尽快关闭文件——无论是因为我们到达了文件末尾、抛出了异常，还是仅仅决定读够了。以下是 <code>LineReader</code> 生成的迭代器类的有趣部分：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-c# data-lang=c#><span style=display:flex><span><span style=color:#66d9ef>private</span> <span style=color:#66d9ef>sealed</span> <span style=color:#66d9ef>class</span> &lt;GetEnumerator&gt;d__3 : IEnumerator&lt;<span style=color:#66d9ef>string</span>&gt;, IEnumerator, IDisposable
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>int</span> &lt;&gt;<span style=color:#ae81ff>1__</span>state;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>string</span> &lt;&gt;<span style=color:#ae81ff>2__</span>current;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> LineReader &lt;&gt;<span style=color:#ae81ff>4__</span><span style=color:#66d9ef>this</span>;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>string</span> &lt;line&gt;<span style=color:#ae81ff>5__5</span>;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> TextReader &lt;reader&gt;<span style=color:#ae81ff>5__4</span>;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>void</span> &lt;&gt;m__Finally6()
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = -<span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (<span style=color:#66d9ef>this</span>.&lt;reader&gt;<span style=color:#ae81ff>5__4</span> != <span style=color:#66d9ef>null</span>)
+</span></span><span style=display:flex><span>        {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>this</span>.&lt;reader&gt;<span style=color:#ae81ff>5__4.D</span>ispose();
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>bool</span> MoveNext()
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>try</span>
+</span></span><span style=display:flex><span>        {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>switch</span> (<span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state)
+</span></span><span style=display:flex><span>            {
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>case</span> <span style=color:#ae81ff>0</span>:
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = -<span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>this</span>.&lt;reader&gt;<span style=color:#ae81ff>5__4</span> = <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>4__</span><span style=color:#66d9ef>this</span>.dataSource();
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = <span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>while</span> ((<span style=color:#66d9ef>this</span>.&lt;line&gt;<span style=color:#ae81ff>5__5</span> = <span style=color:#66d9ef>this</span>.&lt;reader&gt;<span style=color:#ae81ff>5__4.</span>ReadLine()) != <span style=color:#66d9ef>null</span>)
+</span></span><span style=display:flex><span>                    {
+</span></span><span style=display:flex><span>                        <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>2__</span>current = <span style=color:#66d9ef>this</span>.&lt;line&gt;<span style=color:#ae81ff>5__5</span>;
+</span></span><span style=display:flex><span>                        <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = <span style=color:#ae81ff>2</span>;
+</span></span><span style=display:flex><span>                        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span>;
+</span></span><span style=display:flex><span>                    Label_0061:
+</span></span><span style=display:flex><span>                        <span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state = <span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>                    }
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>this</span>.&lt;&gt;m__Finally6();
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>case</span> <span style=color:#ae81ff>2</span>:
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>goto</span> Label_0061;
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>false</span>;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// Note &#34;fault&#34; not &#34;finally&#34;</span>
+</span></span><span style=display:flex><span>        fault
+</span></span><span style=display:flex><span>        {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>this</span>.System.IDisposable.Dispose();
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>void</span> IDisposable.Dispose()
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>switch</span> (<span style=color:#66d9ef>this</span>.&lt;&gt;<span style=color:#ae81ff>1__</span>state)
+</span></span><span style=display:flex><span>        {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>case</span> <span style=color:#ae81ff>1</span>:
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>case</span> <span style=color:#ae81ff>2</span>:
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>            <span style=color:#75715e>// Very strange! Reflector bug? See below.</span>
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>default</span>:
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>try</span>
+</span></span><span style=display:flex><span>                {
+</span></span><span style=display:flex><span>                }
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>finally</span>
+</span></span><span style=display:flex><span>                {
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>this</span>.&lt;&gt;m__Finally6();
+</span></span><span style=display:flex><span>                }
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>break</span>;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// Other stuff: Reset, Current, constructor etc.</span>
+</span></span><span style=display:flex><span>}</span></span></code></pre></div><p>这里有几个有趣的要点需要注意：</p><ul><li>我们有了一个额外的方法，<code>&lt;>m__Finally6</code>，它从 <code>Dispose()</code> 和 <code>MoveNext()</code> 中被调用。它包含了来自原始源代码 <code>using</code> 语句的 finally 块中的代码，并将状态设置为“运行中/之后”。编译器跟踪了如果迭代器在任何特定状态下被释放，哪些 finally 块需要被调用，并在 <code>Dispose()</code> 方法中调用它们。</li><li>为迭代器块本身抛出异常的情况提供了额外的保护。在这种情况下，迭代器被释放并实际上变得无效。这是由生成代码中的 <code>fault</code> 块处理的。就像那些“不可言说”的生成名称一样，这是在真正的 C# 中无法做到的，但它是 IL 中的一个故障处理程序。这类似于 <code>finally</code>，但在对应的 <code>try</code> 块正常进入时不会触发。你可以把它看作有点像通用的 <code>catch</code> 块，在最后重新抛出异常。</li><li>存在一个正值状态，即使我们在运行时也会使用。经过一些实验，看起来每个包含 <code>yield return</code> 语句的 <code>try</code> 块都会生成一个额外的状态。我不完全确定这些额外状态的用途，但大概是为了让在任何特定情况下做正确的事情变得更容易。<code>yield break</code> 语句会导致在方法返回前执行 <code>Dispose()</code>。</li><li><code>Dispose</code> 中的 <code>try/finally</code> 块确实很奇怪。我怀疑这是 Reflector 的一个 bug，并且 <code>break</code> 实际上应该在该块内。我不太明白为什么不直接调用，但可能有很好的理由。</li></ul><p>同样，如果你进行实验，会发现更多东西，但你可以看到编译器尽最大努力确保原始迭代器块中的 finally 块尽可能忠实地被执行。</p><p><strong>结论</strong></p><p>呼！这篇文章比我预期的要长得多。迭代器块中有许多不同的可能性和怪癖需要考虑，我很高兴是 C# 团队而不是我来正确地处理它们。正如你所知，Reflector 是探究底层机制的一个极佳助手，但你需要意识到 C# 编译器会生成一些没有直接对应 C# 代码的代码，比如最后一个例子中使用的 <code>fault</code> 处理程序。</p><p>手动编写迭代器和使用迭代器块编写迭代器之间的差异是巨大的。使用迭代器块实现 LINQ to Objects 的很多功能都相当容易，尽管不可否认在适当时机检查参数是棘手的。手动编写相同的功能将极其痛苦且容易出错。我认为，毫不夸张地说，没有迭代器块，像 LINQBridge 这样的产品可能就不会存在；我确信 MiscUtil 中许多与迭代器相关的代码也不会存在。</p><p>所以，向 C# 团队表示“巨大的感谢”，我期待看到他们能为我消除哪些其他繁琐的任务。</p></article><footer class=book-footer><div class="flex flex-wrap justify-between"><div><a class="flex align-center" href=https://github.com/Zimang/zimang.github.io/commit/d5edbe6a39c83d46b6155fd0e7ebc20c3787b5f4 title='Last modified by 黄子明 | January 16, 2026' target=_blank rel=noopener><img src=/icons/calendar.svg class=book-icon alt=Calendar>
+<span>January 16, 2026</span></a></div><div></div></div><div class="flex flex-wrap justify-between"><span><a href=/my2026/2trans/csharp_in_depth/p2/writing_asynchronous_code/ class="flex align-center"><img src=/icons/backward.svg class=book-icon alt=Backward>
+<span>编写异步代码</span>
+</a></span><span><a href=/my2026/2trans/csharp_in_depth/p2/csharp3/ class="flex align-center"><span>C# 3: LINQ and everything that comes with it</span>
+<img src=/icons/forward.svg class=book-icon alt=Forward></a></span></div><div class=book-comments></div><script>(function(){document.querySelectorAll("pre:has(code)").forEach(e=>{e.addEventListener("click",e.focus),e.addEventListener("copy",function(t){if(t.preventDefault(),navigator.clipboard){const t=window.getSelection().toString()||e.textContent;navigator.clipboard.writeText(t)}})})})()</script></footer><label for=menu-control class="hidden book-menu-overlay"></label></div></main></body></html>

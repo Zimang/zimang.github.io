@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Zimang Book</title><link>https://zimang.fun/my2026/2trans/csharp_in_depth/p4/</link><description>Recent content on Zimang Book</description><generator>Hugo</generator><language>en</language><atom:link href="https://zimang.fun/my2026/2trans/csharp_in_depth/p4/index.xml" rel="self" type="application/rss+xml"/><item><title> C# 8及更高版本</title><link>https://zimang.fun/my2026/2trans/csharp_in_depth/p4/csharp8_and_beyond/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://zimang.fun/my2026/2trans/csharp_in_depth/p4/csharp8_and_beyond/</guid><description>&lt;p&gt;&lt;strong&gt;本章涵盖内容&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;为引用类型表达空值和非空值的预期&lt;/li&gt;
+&lt;li&gt;使用带有模式匹配的switch表达式&lt;/li&gt;
+&lt;li&gt;针对属性递归匹配模式&lt;/li&gt;
+&lt;li&gt;使用索引和范围语法实现简洁一致的代码&lt;/li&gt;
+&lt;li&gt;使用using、foreach和yield语句的异步版本&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;在撰写本文时，C# 8仍在设计中。GitHub仓库显示了许多潜在功能，但只有少数功能达到了编译器公开预览版的阶段。本章内容是基于经验的推测；这里没有任何内容是确定不变的。几乎不可想象所有正在考虑的特性都会被纳入C# 8，我仅限于讨论我认为相当有可能被纳入的特性。我详细介绍了撰写本文时可用的预览特性，但即便如此，这并不意味着不会发生进一步的变化。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;注意&lt;/strong&gt;：在撰写本文时，只有少数C# 8功能在预览版中可用，并且不同版本具有不同的功能。可空引用类型的预览版仅支持完整.NET项目（而非.NET Core SDK风格的项目），如果您的所有项目都使用新的项目格式，这使得在实际代码上实验它们变得更加困难。我期望这些限制会在后续版本中得到解决，可能在您阅读本文时已经解决。&lt;/p&gt;
+&lt;p&gt;我们将从可空引用类型开始。&lt;/p&gt;
+&lt;h1 id="可空引用类型"&gt;&lt;strong&gt;可空引用类型&lt;/strong&gt;&lt;a class="anchor" href="#%e5%8f%af%e7%a9%ba%e5%bc%95%e7%94%a8%e7%b1%bb%e5%9e%8b"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;啊，空引用。Tony Hoare在1960年代引入它们后，于2009年道歉的所谓&amp;quot;十亿美元的错误&amp;quot;。很难找到一个有经验的C#开发人员没有至少几次被NullReferenceException咬过。C#团队有一个计划来驯服空引用，使我们更清楚地知道应该在哪里期望找到它们。&lt;/p&gt;
+&lt;h2 id="可空引用类型解决了什么问题"&gt;&lt;strong&gt;可空引用类型解决了什么问题？&lt;/strong&gt;&lt;a class="anchor" href="#%e5%8f%af%e7%a9%ba%e5%bc%95%e7%94%a8%e7%b1%bb%e5%9e%8b%e8%a7%a3%e5%86%b3%e4%ba%86%e4%bb%80%e4%b9%88%e9%97%ae%e9%a2%98"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;作为我在本节中扩展的示例，让我们考虑下面的类。如果您在下载的源代码中跟随，您会看到我将它们声明为每个示例中的单独嵌套类，因为代码会随时间变化。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;清单15.1 C# 8之前的初始模型&lt;/strong&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-csharp" data-lang="csharp"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Customer&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;string&lt;/span&gt; Name { &lt;span style="color:#66d9ef"&gt;get&lt;/span&gt;; &lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; Address Address { &lt;span style="color:#66d9ef"&gt;get&lt;/span&gt;; &lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Address&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;string&lt;/span&gt; Country { &lt;span style="color:#66d9ef"&gt;get&lt;/span&gt;; &lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;地址通常包含比国家多得多的信息，但单个属性足以用于本章的示例。有了这些类，这段代码有多安全？&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-csharp" data-lang="csharp"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Customer customer = ...;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Console.WriteLine(customer.Address.Country);&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;如果您（以某种方式）知道customer非空且客户总是有一个关联的地址，那可能没问题。但您如何知道呢？如果您知道仅仅是因为您查看了文档，那么需要改变什么才能使代码更安全？&lt;/p&gt;
+&lt;p&gt;自C# 2以来，我们有了可空值类型、不可空值类型和隐式可空的引用类型。一个可空/不可空与值/引用类型的网格已经填充了四个格子中的三个，但第四个一直难以捉摸，如表15.1所示。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;表15.1 C# 7中引用类型和值类型的可空性和不可空性支持&lt;/strong&gt;&lt;/p&gt;
+&lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;类型&lt;/th&gt;
+ &lt;th&gt;可空&lt;/th&gt;
+ &lt;th&gt;不可空&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ &lt;tr&gt;
+ &lt;td&gt;引用类型&lt;/td&gt;
+ &lt;td&gt;隐式&lt;/td&gt;
+ &lt;td&gt;不支持&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;值类型&lt;/td&gt;
+ &lt;td&gt;Nullable&lt;!-- raw HTML omitted --&gt;或?后缀&lt;/td&gt;
+ &lt;td&gt;默认&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;顶行只有一个支持的格子，这意味着我们无法表达某些引用值可能为空而其他引用值应该永远不为空的意图。当您遇到意外的空值问题时，很难确定故障所在，除非代码经过仔细记录并一致地实现了空值检查。&lt;/p&gt;
+&lt;p&gt;考虑到现在存在大量.NET代码，没有机器可读的区别来区分可以合理为空的引用和必须始终非空的引用，任何尝试纠正这种情况都只能是谨慎的。我们能做什么？&lt;/p&gt;
+&lt;h2 id="使用引用类型时改变含义"&gt;&lt;strong&gt;使用引用类型时改变含义&lt;/strong&gt;&lt;a class="anchor" href="#%e4%bd%bf%e7%94%a8%e5%bc%95%e7%94%a8%e7%b1%bb%e5%9e%8b%e6%97%b6%e6%94%b9%e5%8f%98%e5%90%ab%e4%b9%89"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;空安全功能的广泛理念是假设当开发人员有意区分不可空和可空引用类型时，默认是不可空的。为可空引用类型引入了新语法：string是不可空引用类型，而string?是可空引用类型。网格然后演变为表15.2所示。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;表15.2 C# 8中引用类型和值类型的可空性和不可空性支持&lt;/strong&gt;&lt;/p&gt;</description></item><item><title>C# 7 中的简介代码</title><link>https://zimang.fun/my2026/2trans/csharp_in_depth/p4/concise_code_in_csharp7/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://zimang.fun/my2026/2trans/csharp_in_depth/p4/concise_code_in_csharp7/</guid><description>&lt;p&gt;&lt;strong&gt;本章涵盖内容&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;在方法内部声明方法（局部方法）&lt;/li&gt;
+&lt;li&gt;使用out参数简化调用&lt;/li&gt;
+&lt;li&gt;更可读地书写数字字面量&lt;/li&gt;
+&lt;li&gt;将throw作为表达式使用&lt;/li&gt;
+&lt;li&gt;使用默认字面量&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;C# 7带来了一些大型特性，这些特性改变了我们编写代码的方式：元组、解构和模式匹配。它还带来了一些复杂但高效的特性，这些特性直接针对高性能场景。此外，它还包含一组小特性，这些特性只是让生活变得更美好一些。本章中没有哪个特性是惊天动地的；每个特性都只带来一点小改变，但将它们组合起来可以带来非常简洁、清晰的代码。&lt;/p&gt;
+&lt;h1 id="局部方法"&gt;局部方法&lt;a class="anchor" href="#%e5%b1%80%e9%83%a8%e6%96%b9%e6%b3%95"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;如果不是《C#深入解析》这本书，这一节可能会很短；你可以在方法内部编写方法。当然，这还不止，但让我们从一个简单的例子开始。下面的清单展示了一个常规Main方法中的一个简单局部方法。局部方法打印并递增Main中声明的局部变量，演示了变量捕获在局部方法中的工作原理。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;清单14.1 访问局部变量的简单局部方法&lt;/strong&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-csharp" data-lang="csharp"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;static&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;void&lt;/span&gt; Main()
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; x = &lt;span style="color:#ae81ff"&gt;10&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; PrintAndIncrementX();
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; PrintAndIncrementX();
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; Console.WriteLine(&lt;span style="color:#e6db74"&gt;$&amp;#34;After calls, x = {x}&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;void&lt;/span&gt; PrintAndIncrementX()
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; Console.WriteLine(&lt;span style="color:#e6db74"&gt;$&amp;#34;x = {x}&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; x++;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;当你第一次看到这个时，可能会觉得有点奇怪，但你很快就会习惯。局部方法可以出现在任何有语句块的地方：方法、构造函数、属性、索引器、事件访问器、终结器，甚至可以在匿名函数内部或另一个局部方法内部嵌套。&lt;/p&gt;
+&lt;p&gt;局部方法声明类似于普通方法声明，但有以下限制：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;不能有任何访问修饰符（public等）&lt;/li&gt;
+&lt;li&gt;不能有extern、virtual、new、override、static或abstract修饰符&lt;/li&gt;
+&lt;li&gt;不能有任何特性（例如[MethodImpl]）应用于它&lt;/li&gt;
+&lt;li&gt;不能与同一父级中的另一个局部方法同名；无法重载局部方法&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;另一方面，局部方法在其他方面类似于标准方法，例如：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;可以是void或返回值&lt;/li&gt;
+&lt;li&gt;可以有async修饰符&lt;/li&gt;
+&lt;li&gt;可以有unsafe修饰符&lt;/li&gt;
+&lt;li&gt;可以通过迭代器块实现&lt;/li&gt;
+&lt;li&gt;可以有参数，包括可选参数&lt;/li&gt;
+&lt;li&gt;可以是泛型的&lt;/li&gt;
+&lt;li&gt;可以引用任何封闭类型参数&lt;/li&gt;
+&lt;li&gt;可以是方法组转换到委托类型的目标&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;如清单14.1所示，在方法使用之后声明方法是完全可行的。局部方法可以调用自身或作用域内的其他局部方法。然而，位置仍然很重要，主要是在局部方法如何引用捕获的变量方面：在封闭代码中声明但在局部方法中使用的局部变量。&lt;/p&gt;
+&lt;p&gt;实际上，局部方法的大部分复杂性，无论是语言规则还是实现，都围绕它们读写捕获变量的能力。让我们从语言施加的规则开始讨论。&lt;/p&gt;
+&lt;h2 id="局部方法中的变量访问"&gt;局部方法中的变量访问&lt;a class="anchor" href="#%e5%b1%80%e9%83%a8%e6%96%b9%e6%b3%95%e4%b8%ad%e7%9a%84%e5%8f%98%e9%87%8f%e8%ae%bf%e9%97%ae"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;你已经看到，封闭块中的局部变量可以被读取和写入，但还有更多的细微差别。这里有很多小规则，但你不需要担心详尽地学习它们。大多数时候你甚至不会注意到它们，如果编译器抱怨你期望有效的代码，你可以参考本节。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;局部方法只能捕获作用域内的变量&lt;/strong&gt;
+你不能引用作用域之外的局部变量，一般来说，就是声明它的块。例如，假设你希望局部方法使用在循环中声明的迭代变量；局部方法本身也必须声明在循环中。作为一个简单的例子，这是无效的：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-csharp" data-lang="csharp"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;static&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;void&lt;/span&gt; Invalid()
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;for&lt;/span&gt; (&lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; i = &lt;span style="color:#ae81ff"&gt;0&lt;/span&gt;; i &amp;lt; &lt;span style="color:#ae81ff"&gt;10&lt;/span&gt;; i++)
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; PrintI();
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;void&lt;/span&gt; PrintI() =&amp;gt; Console.WriteLine(i); &lt;span style="color:#75715e"&gt;// 无法访问i；它不在作用域内&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;但是将局部方法放在循环内部，就是有效的：&lt;/p&gt;</description></item><item><title>通过更多引用传递提高效率</title><link>https://zimang.fun/my2026/2trans/csharp_in_depth/p4/imporving_eff_with_more_pass_by_ref/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://zimang.fun/my2026/2trans/csharp_in_depth/p4/imporving_eff_with_more_pass_by_ref/</guid><description>&lt;p&gt;&lt;strong&gt;本章涵盖内容&lt;/strong&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;使用 &lt;code&gt;ref&lt;/code&gt; 关键字为变量起别名&lt;/li&gt;
+&lt;li&gt;使用引用返回（&lt;code&gt;ref returns&lt;/code&gt;）返回变量&lt;/li&gt;
+&lt;li&gt;使用 &lt;code&gt;in&lt;/code&gt; 参数高效传递参数&lt;/li&gt;
+&lt;li&gt;使用只读引用返回、只读引用局部变量和只读结构体声明来防止数据更改&lt;/li&gt;
+&lt;li&gt;以 &lt;code&gt;in&lt;/code&gt; 或 &lt;code&gt;ref&lt;/code&gt; 目标为目标的扩展方法&lt;/li&gt;
+&lt;li&gt;类似引用的结构体（Ref-like structs）和 &lt;code&gt;Span&amp;lt;T&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;当 C# 7.0 发布时，有几个功能让我觉得有点奇怪：引用局部变量（ref locals）和引用返回（ref returns）。我有点怀疑有多少开发人员会需要它们，因为它们似乎针对涉及大型值类型的场景，而这种情况很少见。我的预期是只有近乎实时的服务和游戏会觉得这些功能有用。&lt;/p&gt;
+&lt;p&gt;C# 7.2 带来了另一批与引用相关的功能：&lt;code&gt;in&lt;/code&gt; 参数、只读引用局部变量和返回、只读结构体以及类似引用的结构体。这些是对 7.0 功能的补充，但似乎仍然是为了少数用户的利益而使语言变得更加复杂。&lt;/p&gt;
+&lt;p&gt;我现在确信，尽管许多开发人员可能不会在他们的项目中直接看到更多基于引用的代码，但他们将因为框架中提供了更高效的功能而享受到这些功能存在的好处。在撰写本文时，要确切地说这将被证明有多么革命性还为时过早，但我认为它很可能意义重大。&lt;/p&gt;
+&lt;p&gt;性能通常以牺牲可读性为代价。我仍然认为本章描述的许多功能就是这种情况；我预计它们会在性能已知足够重要、值得付出可读性代价的情况下被谨慎使用。然而，所有这些功能所带来的框架变革则是另一回事。它们应该能够相当容易地减少对象分配，节省内存和垃圾回收器的工作，而不会使您的代码更难阅读。&lt;/p&gt;
+&lt;p&gt;我提出所有这些是因为您可能会有类似的反应。在阅读本章时，完全有理由决定尝试避免使用这里的大多数语言功能。但我敦促您坚持读到最后，以了解与框架相关的好处。关于类似引用结构体的最后一部分介绍了 &lt;code&gt;Span&amp;lt;T&amp;gt;&lt;/code&gt;。关于 Span 可以说的内容远比我在这本书中有空间写的要多，但我预计 Span 和相关类型将成为未来开发人员工具箱的重要组成部分。&lt;/p&gt;
+&lt;p&gt;在本章中，我会提到某个功能仅在 C# 7 的某个小版本中可用。与其他小版本功能一样，这意味着如果您使用的是 C# 7 编译器，只有通过适当的项目设置指定语言版本，您才能利用这些功能。我建议您对与引用相关的功能采取全有或全无的方法：要么使用所有功能，并使用适当的设置来允许这样做，要么一个都不用。仅使用 C# 7.0 中的功能可能会不太令人满意。说了这么多，让我们从回顾早期 C# 版本中 &lt;code&gt;ref&lt;/code&gt; 关键字的使用开始。&lt;/p&gt;
+&lt;h1 id="回顾关于-ref-你知道什么"&gt;&lt;strong&gt;回顾：关于 ref 你知道什么？&lt;/strong&gt;&lt;a class="anchor" href="#%e5%9b%9e%e9%a1%be%e5%85%b3%e4%ba%8e-ref-%e4%bd%a0%e7%9f%a5%e9%81%93%e4%bb%80%e4%b9%88"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;为了理解 C# 7 中与引用相关的功能，您需要牢固掌握 &lt;code&gt;ref&lt;/code&gt; 参数在 C# 6 及更早版本中是如何工作的。而这又需要牢固掌握变量与其值之间的区别。&lt;/p&gt;
+&lt;p&gt;&lt;img src="./../../../../../../../../AppData/Roaming/Typora/typora-user-images/image-20260208214307636.png" alt="image-20260208214307636" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;图 13.1 将变量表示为一张纸&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;当变量类型是引用类型时，写在纸上的值从来不是对象；它总是一个对象引用。对象引用只是一种导航到对象的方式，就像街道地址是导航到建筑物的一种方式一样。两张纸上写有相同的地址，指的是同一栋建筑，就像两个具有相同引用值的变量指向同一个对象一样。&lt;/p&gt;</description></item><item><title>解构与模式匹配</title><link>https://zimang.fun/my2026/2trans/csharp_in_depth/p4/deconstruction_and_pattern_matching/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://zimang.fun/my2026/2trans/csharp_in_depth/p4/deconstruction_and_pattern_matching/</guid><description>&lt;p&gt;本章涵盖：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;将元组解构为多个变量&lt;/li&gt;
+&lt;li&gt;解构非元组类型&lt;/li&gt;
+&lt;li&gt;在 C# 7 中应用模式匹配&lt;/li&gt;
+&lt;li&gt;使用 C# 7 引入的三种模式&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;在第 11 章中，您了解到元组允许您简单地组合数据，而无需创建新类型，并允许一个变量充当其他变量的包。当您使用元组时——例如，打印整数序列的最小值，然后打印最大值——您需要逐个从元组中提取值。&lt;/p&gt;
+&lt;p&gt;这当然可行，并且在许多情况下这就是您所需要的。但在很多情况下，您会希望将复合值分解为单独的变量。此操作称为&lt;strong&gt;解构&lt;/strong&gt;。该复合值可以是元组，也可以是其他类型——例如 &lt;code&gt;KeyValuePair&lt;/code&gt;。C# 7 提供了简单的语法，允许在单个语句中声明或初始化多个变量。&lt;/p&gt;
+&lt;p&gt;解构以无条件的方式发生，就像一系列赋值一样。模式匹配类似，但处于更动态的上下文中；输入值必须匹配模式才能执行其后的代码。C# 7 在几种上下文中引入了模式匹配和几种模式，未来版本可能会有更多。我们将从解构您刚刚创建的元组开始，构建在第 11 章的基础之上。&lt;/p&gt;
+&lt;h1 id="元组的解构"&gt;&lt;strong&gt;元组的解构&lt;/strong&gt;&lt;a class="anchor" href="#%e5%85%83%e7%bb%84%e7%9a%84%e8%a7%a3%e6%9e%84"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;C# 7 提供两种解构方式：一种用于元组，一种用于其他所有情况。它们遵循相同的语法并具有相同的通用特性，但抽象地讨论它们可能会令人困惑。我们将首先讨论元组，并指出任何特定于元组的细节。在 12.2 节中，您将看到相同的想法如何应用于其他类型。为了让您了解即将介绍的内容，下面的清单展示了解构的几个特性，每个特性您都将更详细地研究。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;清单 12.1 使用元组解构的概述&lt;/strong&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-csharp" data-lang="csharp"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; tuple = (&lt;span style="color:#ae81ff"&gt;10&lt;/span&gt;, &lt;span style="color:#e6db74"&gt;&amp;#34;text&amp;#34;&lt;/span&gt;); &lt;span style="color:#75715e"&gt;// 创建一个 (int, string) 类型的元组&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; (a, b) = tuple; &lt;span style="color:#75715e"&gt;// 隐式地将元组解构到新变量 a, b&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;(&lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; c, &lt;span style="color:#66d9ef"&gt;string&lt;/span&gt; d) = tuple; &lt;span style="color:#75715e"&gt;// 显式地将元组解构到新变量 c, d&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; e;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;string&lt;/span&gt; f;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;(e, f) = tuple; &lt;span style="color:#75715e"&gt;// 将元组解构到现有变量 e, f&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Console.WriteLine(&lt;span style="color:#e6db74"&gt;$&amp;#34;a: {a}; b: {b}&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Console.WriteLine(&lt;span style="color:#e6db74"&gt;$&amp;#34;c: {c}; d: {d}&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Console.WriteLine(&lt;span style="color:#e6db74"&gt;$&amp;#34;e: {e}; f: {f}&amp;#34;&lt;/span&gt;); &lt;span style="color:#75715e"&gt;// 证明解构有效&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;我猜，如果给您看这段代码并告诉您它能编译，您可能已经能猜到输出，即使您之前没有阅读过任何关于元组或解构的内容：&lt;/p&gt;</description></item><item><title>使用元组进行组合</title><link>https://zimang.fun/my2026/2trans/csharp_in_depth/p4/composition_using_tuples/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://zimang.fun/my2026/2trans/csharp_in_depth/p4/composition_using_tuples/</guid><description>&lt;p&gt;本章涵盖：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;使用元组组合数据&lt;/li&gt;
+&lt;li&gt;元组语法：字面量和类型&lt;/li&gt;
+&lt;li&gt;转换元组&lt;/li&gt;
+&lt;li&gt;元组在 CLR 中的表示方式&lt;/li&gt;
+&lt;li&gt;元组的替代方案及其使用准则&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;早在 C# 3 中，LINQ 就彻底改变了我们编写处理数据集合的代码的方式。它实现这一点的方式之一是允许我们根据如何处理每个单独的数据项来表达许多操作：如何将数据项从一种表示形式转换为另一种，或者如何将数据项过滤出结果，或者如何基于每个数据项的特定方面对集合进行排序。尽管如此，LINQ 并没有为我们提供许多用于处理非集合的新工具。&lt;/p&gt;
+&lt;p&gt;匿名类型提供了一种组合方式，但有一个巨大的限制：仅在代码块内有用。你无法声明一个方法返回匿名类型，正是因为返回类型无法命名。&lt;/p&gt;
+&lt;p&gt;C# 7 引入了对元组的支持，使数据组合变得简单，同时还支持从组合类型解构到其单独组件。如果你现在在想 C# 已经有 &lt;code&gt;System.Tuple&lt;/code&gt; 形式的元组，那么从某种程度上说你是对的；这些类型已经存在于框架中，但没有任何语言支持。更令人困惑的是，C# 7 并没有使用这些元组类型来实现其语言支持的元组。它使用了一组新的 &lt;code&gt;System.ValueTuple&lt;/code&gt; 类型，你将在 11.4 节中探讨。11.5.1 节中会与 &lt;code&gt;System.Tuple&lt;/code&gt; 进行比较。&lt;/p&gt;
+&lt;h1 id="元组简介"&gt;&lt;strong&gt;元组简介&lt;/strong&gt;&lt;a class="anchor" href="#%e5%85%83%e7%bb%84%e7%ae%80%e4%bb%8b"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;元组允许你从多个单独的值创建一个单一的复合值。它们是组合的简写形式，没有额外的封装，适用于值之间相互关联但你不想费力创建新类型的情况。C# 7 引入了新的语法，使元组使用起来很简单。&lt;/p&gt;
+&lt;p&gt;举个例子，假设你有一个整数序列，你想在一次遍历中找到最小值和最大值。这听起来像是你应该能够将这段代码放入一个方法中，但返回类型应该是什么呢？你可以返回最小值并使用一个 &lt;code&gt;out&lt;/code&gt; 参数表示最大值，或者使用两个 &lt;code&gt;out&lt;/code&gt; 参数，但这两者感觉都相当笨拙。你可以创建一个单独的命名类型，但对于一个例子来说工作量太大了。你可以使用 .NET 4 中引入的 &lt;code&gt;Tuple&amp;lt;,&amp;gt;&lt;/code&gt; 类返回一个 &lt;code&gt;Tuple&amp;lt;int, int&amp;gt;&lt;/code&gt;，但你无法轻易分辨哪个是最小值哪个是最大值（而且为了返回这两个值，最终还需要分配一个对象）。或者，你可以使用 C# 7 的元组。你可以这样声明方法：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-csharp" data-lang="csharp"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;static&lt;/span&gt; (&lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; min, &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; max) MinMax(IEnumerable&amp;lt;&lt;span style="color:#66d9ef"&gt;int&lt;/span&gt;&amp;gt; source)&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;然后你可以这样调用它：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-csharp" data-lang="csharp"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;int&lt;/span&gt;[] values = { &lt;span style="color:#ae81ff"&gt;2&lt;/span&gt;, &lt;span style="color:#ae81ff"&gt;7&lt;/span&gt;, &lt;span style="color:#ae81ff"&gt;3&lt;/span&gt;, -&lt;span style="color:#ae81ff"&gt;5&lt;/span&gt;, &lt;span style="color:#ae81ff"&gt;1&lt;/span&gt;, &lt;span style="color:#ae81ff"&gt;0&lt;/span&gt;, &lt;span style="color:#ae81ff"&gt;10&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; extremes = MinMax(values); &lt;span style="color:#75715e"&gt;// 调用方法计算最小值和最大值，并将它们作为元组返回&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Console.WriteLine(extremes.min); &lt;span style="color:#75715e"&gt;// 打印最小值 (-5)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Console.WriteLine(extremes.max); &lt;span style="color:#75715e"&gt;// 打印最大值 (10)&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;你很快就会看到 &lt;code&gt;MinMax&lt;/code&gt; 的几种实现，但这个例子应该让你对这个特性的目的有足够的了解，值得阅读本章中相当详细的描述。对于一个听起来简单的特性，关于元组的内容相当多，而且都是相互关联的，这使得很难按逻辑顺序描述。如果你在阅读时发现自己想问“但是……呢？”，我建议你在心里把这个问题记下来，直到本节结束。这里没有什么复杂的内容，但有很多内容要理解，特别是因为我的目标是全面。希望当你读完本章时，所有问题都会得到解答。&lt;/p&gt;</description></item></channel></rss>

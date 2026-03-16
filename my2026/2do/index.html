@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Week One#早上和下班时间多看看fragment,activity生命周期源码，View的渲染绘制 C# 书要过一遍 . 普通api没必要实操打字, 抓重难点。 每天腾出半小时，安排一下，跑一下代码，分配一下 Carplay 框架要设计一下，避免之后出现各种各样的问题 波斯语文本更新 T22 UI CR T22, g6 ,t19c bug日常维护 ">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#343a40">
+<meta name="color-scheme" content="light dark"><meta property="og:url" content="http://localhost:1313/my2026/2do/">
+  <meta property="og:site_name" content="Zimang Book">
+  <meta property="og:title" content="2plan">
+  <meta property="og:description" content="Week One#早上和下班时间多看看fragment,activity生命周期源码，View的渲染绘制 C# 书要过一遍 . 普通api没必要实操打字, 抓重难点。 每天腾出半小时，安排一下，跑一下代码，分配一下 Carplay 框架要设计一下，避免之后出现各种各样的问题 波斯语文本更新 T22 UI CR T22, g6 ,t19c bug日常维护">
+  <meta property="og:locale" content="en">
+  <meta property="og:type" content="website">
+
+
+  <meta itemprop="name" content="2plan">
+  <meta itemprop="description" content="Week One#早上和下班时间多看看fragment,activity生命周期源码，View的渲染绘制 C# 书要过一遍 . 普通api没必要实操打字, 抓重难点。 每天腾出半小时，安排一下，跑一下代码，分配一下 Carplay 框架要设计一下，避免之后出现各种各样的问题 波斯语文本更新 T22 UI CR T22, g6 ,t19c bug日常维护">
+  <meta itemprop="dateModified" content="2026-01-11T20:43:58+08:00">
+  <meta itemprop="wordCount" content="19">
+
+<title>2plan | Zimang Book</title>
+<link rel="icon" href="/favicon.png" >
+<link rel="manifest" href="/manifest.json">
+<link rel="canonical" href="http://localhost:1313/my2026/2do/">
+<link rel="stylesheet" href="/book.min.cc2c524ed250aac81b23d1f4af87344917b325208841feca0968fe450f570575.css" integrity="sha256-zCxSTtJQqsgbI9H0r4c0SRezJSCIQf7KCWj&#43;RQ9XBXU=" crossorigin="anonymous">
+
+
+  <script defer src="/fuse.min.js"></script>
+  <script defer src="/en.search.min.986a44f91151b9600a8b62863be2b7f00a86f2e1273e6c0aacb29a997bdf71a7.js" integrity="sha256-mGpE&#43;RFRuWAKi2KGO&#43;K38AqG8uEnPmwKrLKamXvfcac=" crossorigin="anonymous"></script>
+
+
+<link rel="alternate" type="application/rss+xml" href="http://localhost:1313/my2026/2do/index.xml" title="Zimang Book" />
+
+  
+</head>
+<body dir="ltr" class="book-kind-section book-type-my2026">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    
+<aside class="book-menu">
+  <div class="book-menu-content">
+    
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="/"><span>Zimang Book</span>
+  </a>
+</h2>
+
+
+<div class="book-search hidden">
+  <input id="book-search-input" type="text" 
+    placeholder="Search"
+    aria-label="Search"
+    maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+<script>document.querySelector(".book-search").classList.remove("hidden")</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/my2026/2lab/" class="">
+      2lab</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/my2026/2do/" class="active">
+      2plan</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/my2026/2do/gemedev/sublime/" class="">
+      总览</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/my2026/2do/subject/" class="">
+      科目</a>
+  
+
+          
+  <ul>
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/my2026/2do/gemedev/c/" class="">
+      能力节点</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/my2026/2read/" class="">
+      2read</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+<ul><li><a href="/posts/" title="Blog">Blog</a></li></ul>
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+
+  </div>
+</aside>
+ 
+
+    <div class="book-page">
+      <header class="book-header hidden">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/icons/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <h3>2plan</h3>
+
+  <label for="toc-control">
+    
+  </label>
+</div>
+
+
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown book-article"><h1 id="week-one">Week One<a class="anchor" href="#week-one">#</a></h1>
+<ol>
+<li>早上和下班时间多看看fragment,activity生命周期源码，View的渲染绘制</li>
+<li>C# 书要过一遍 . 普通api没必要实操打字, 抓重难点。 每天腾出半小时，安排一下，跑一下代码，分配一下</li>
+<li>Carplay 框架要设计一下，避免之后出现各种各样的问题</li>
+<li>波斯语文本更新</li>
+<li>T22 UI CR</li>
+<li>T22, g6 ,t19c bug日常维护</li>
+</ol>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+<div>
+<a class="flex align-center" href="https://github.com/Zimang/zimang.github.io/commit/be6ee7ec5b06b3cc7a48324e9281b1ba2f348502" title='Last modified by 黄子明 | January 11, 2026' target="_blank" rel="noopener">
+    <img src="/icons/calendar.svg" class="book-icon" alt="Calendar" />
+    <span>January 11, 2026</span>
+  </a>
+
+</div>
+
+<div>
+
+</div>
+
+</div>
+
+
+
+
+
+  
+  
+  
+  <div class="flex flex-wrap justify-between">
+    <span>
+    
+      <a href="/my2026/2lab/" class="flex align-center">
+        <img src="/icons/backward.svg" class="book-icon" alt="Backward" />
+        <span>2lab</span>
+      </a>
+    
+    </span>
+    <span>
+    
+      <a href="/my2026/2do/gemedev/sublime/" class="flex align-center">
+        <span>总览</span>
+        <img src="/icons/forward.svg" class="book-icon" alt="Forward" />
+      </a>
+    
+    </span>
+  </div>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+        
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+        
+        
+  
+ 
+        
+  
+  
+    <script>(function(){document.querySelectorAll("pre:has(code)").forEach(e=>{e.addEventListener("click",e.focus),e.addEventListener("copy",function(t){if(t.preventDefault(),navigator.clipboard){const t=window.getSelection().toString()||e.textContent;navigator.clipboard.writeText(t)}})})})()</script>
+  
+
+      </footer>
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+  
+ 
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

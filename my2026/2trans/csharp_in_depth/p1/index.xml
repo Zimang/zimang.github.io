@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>P1 C# in context on Zimang Book</title><link>https://zimang.fun/my2026/2trans/csharp_in_depth/p1/</link><description>Recent content in P1 C# in context on Zimang Book</description><generator>Hugo</generator><language>en</language><atom:link href="https://zimang.fun/my2026/2trans/csharp_in_depth/p1/index.xml" rel="self" type="application/rss+xml"/><item><title>Survival of the sharpest</title><link>https://zimang.fun/my2026/2trans/csharp_in_depth/p1/survival-of-the-sharpest/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://zimang.fun/my2026/2trans/csharp_in_depth/p1/survival-of-the-sharpest/</guid><description>&lt;p&gt;本章内容包括&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;C# 快速发展如何提升开发者的生产力&lt;/li&gt;
+&lt;li&gt;选择 C# 的小版本以使用最新功能&lt;/li&gt;
+&lt;li&gt;在更多环境中运行 C# 的能力&lt;/li&gt;
+&lt;li&gt;受益于开放且积极的社区&lt;/li&gt;
+&lt;li&gt;本书对新旧 C# 版本的关注点&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;挑选出最有趣的 C# 特性来介绍并不容易。有些特性非常吸引人，但很少被使用；有些则极其重要，但对 C# 开发者来说已经司空见惯。像 async/await 这样的功能在很多方面都很出色，但很难简短地说明。话不多说，让我们来看看 C# 随时间的发展历程。&lt;/p&gt;
+&lt;h1 id="一门发展中的语言"&gt;一门发展中的语言&lt;a class="anchor" href="#%e4%b8%80%e9%97%a8%e5%8f%91%e5%b1%95%e4%b8%ad%e7%9a%84%e8%af%ad%e8%a8%80"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;在本书的早期版本中，我曾提供过一个示例，展示该版本涵盖的语言演变过程。但现在，这种方式已难以做到既全面又有趣。虽然大型应用程序可能会使用几乎所有新特性，但任何适合印刷版展示的单一代码片段通常只会涵盖其中的一部分。&lt;/p&gt;
+&lt;p&gt;因此，在本节中，我挑选了我认为最重要的 C# 语言演进主题，并简要展示了相关改进。这远非功能的详尽列表，也不是为了教你如何使用这些特性，而是提醒你已熟悉的功能如何推动了语言的发展，同时激发你对尚未接触的新特性的兴趣。&lt;/p&gt;
+&lt;p&gt;如果你觉得其中一些特性借鉴了你熟悉的其他语言，几乎可以肯定你是对的。C# 团队毫不犹豫地吸收其他语言中的优秀理念，并将其重新塑造，使之自然融入 C#。这是一件非常棒的事情！特别值得一提的是，F# 对许多 C# 特性的设计灵感贡献良多。&lt;/p&gt;
+&lt;blockquote class='book-hint '&gt;
+&lt;p&gt;F# 可能最大的影响力不在于它为 F# 开发者带来了什么，而在于它对 C# 的影响。这并不是贬低 F# 作为一门语言本身的价值，也不是说不应该直接使用 F#。但目前，C# 社区远远大于 F# 社区，而 C# 社区应当感谢 F#，因为正是它激励了 C# 团队的发展。&lt;/p&gt;
+&lt;/blockquote&gt;&lt;h2 id="大规模与小规模下都实用的类型系统"&gt;大规模与小规模下都实用的类型系统&lt;a class="anchor" href="#%e5%a4%a7%e8%a7%84%e6%a8%a1%e4%b8%8e%e5%b0%8f%e8%a7%84%e6%a8%a1%e4%b8%8b%e9%83%bd%e5%ae%9e%e7%94%a8%e7%9a%84%e7%b1%bb%e5%9e%8b%e7%b3%bb%e7%bb%9f"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;C# 从一开始就是一门静态类型语言：你的代码需要指定变量、参数、方法返回值等的类型。你越能精确地描述代码所接受和返回的数据结构，编译器就越能帮你避免错误。
+随着你构建的应用程序规模不断扩大，这一点尤为重要。如果你能在一屏内（或者至少能在脑海中一次性掌握）看到整个程序的所有代码，静态类型语言的优势并不明显。但随着规模的增长，代码能够简洁有效地传达其功能变得越来越关键。你可以通过文档来实现这一点，但静态类型则允许你以机器可读的方式进行沟通。&lt;br&gt;
+随着 C# 的发展，其类型系统也支持了更细粒度的描述。最明显的例子就是泛型。在 C# 1.0 中，你可能会写出这样的代码：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-c#" data-lang="c#"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Bookshelf&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;	&lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; IEnumerable Books { &lt;span style="color:#66d9ef"&gt;get&lt;/span&gt; { ... } }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Books 序列中的每个元素是什么类型？类型系统并没有告诉你。使用 C# 2 的泛型，你可以更有效地表达：&lt;/p&gt;</description></item></channel></rss>

@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>p2 c# 2~5 on Zimang Book</title><link>https://zimang.fun/my2026/2trans/csharp_in_depth/p2/</link><description>Recent content in p2 c# 2~5 on Zimang Book</description><generator>Hugo</generator><language>en</language><atom:link href="https://zimang.fun/my2026/2trans/csharp_in_depth/p2/index.xml" rel="self" type="application/rss+xml"/><item><title>C# 5 bonus features</title><link>https://zimang.fun/my2026/2trans/csharp_in_depth/p2/csharp5_bonus_features/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://zimang.fun/my2026/2trans/csharp_in_depth/p2/csharp5_bonus_features/</guid><description>&lt;p&gt;&lt;strong&gt;本章涵盖&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;修复了 &lt;code&gt;foreach&lt;/code&gt; 循环中变量捕获的问题&lt;/li&gt;
+&lt;li&gt;新增调用方信息特性&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;如果 C# 是为本书作者着想而设计的，那本章本不该存在，或者长度会更标准些。我可以说，在 C# 5 的异步大餐之后、C# 6 的甜点之前，我想加入一个简短的章节来“清洁味蕾”，但现实是 C# 5 中还有两个需要涵盖的变化无法归入异步章节。第一个与其说是一个新特性，不如说是对早期语言设计错误的一个修正。&lt;/p&gt;
+&lt;h1 id="在"&gt;&lt;strong&gt;在 &lt;code&gt;foreach&lt;/code&gt; 循环中捕获变量&lt;/strong&gt;&lt;a class="anchor" href="#%e5%9c%a8"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;在 C# 5 之前，语言规范将 &lt;code&gt;foreach&lt;/code&gt; 循环描述为：&lt;strong&gt;每个循环声明一个单一的迭代变量&lt;/strong&gt;。该变量在原代码中是只读的，但在循环的每次迭代中会获得不同的值。例如，在 C# 3 中，对一个 &lt;code&gt;List&amp;lt;string&amp;gt;&lt;/code&gt; 的 &lt;code&gt;foreach&lt;/code&gt; 循环如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-csharp" data-lang="csharp"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;foreach&lt;/span&gt; (&lt;span style="color:#66d9ef"&gt;string&lt;/span&gt; name &lt;span style="color:#66d9ef"&gt;in&lt;/span&gt; names)
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; Console.WriteLine(name);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;大致等价于：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-csharp" data-lang="csharp"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;string&lt;/span&gt; name; &lt;span style="color:#75715e"&gt;// 声明一个单一的迭代变量&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;using&lt;/span&gt; (&lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; iterator = names.GetEnumerator()) &lt;span style="color:#75715e"&gt;// 不可见的迭代器变量&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;while&lt;/span&gt; (iterator.MoveNext())
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; name = iterator.Current; &lt;span style="color:#75715e"&gt;// 每次迭代为迭代变量赋新值&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; Console.WriteLine(name); &lt;span style="color:#75715e"&gt;// foreach 循环的原主体&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote class='book-hint '&gt;
+&lt;p&gt;&lt;strong&gt;注意&lt;/strong&gt;：规范围绕集合和元素可能的转换还有许多其他细节，但与此变更无关。此外，迭代变量的作用域仅限于循环内部；你可以想象在整个代码周围加一对额外的大括号。&lt;/p&gt;
+&lt;/blockquote&gt;&lt;p&gt;在 C# 1 中，这没有问题。但在 C# 2 引入匿名方法时，就开始出问题了。那是第一次变量可以被&lt;strong&gt;捕获&lt;/strong&gt;，显著改变了它的生命周期。当一个变量在匿名函数中被使用时，它就被捕获了，编译器必须在幕后做工作，使其使用起来感觉自然。尽管 C# 2 的匿名方法很有用，但我的印象是，C# 3 及其 lambda 表达式和 LINQ 才真正鼓励开发者更广泛地使用委托。&lt;/p&gt;</description></item><item><title>C#2</title><link>https://zimang.fun/my2026/2trans/csharp_in_depth/p2/csharp2/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://zimang.fun/my2026/2trans/csharp_in_depth/p2/csharp2/</guid><description>&lt;p&gt;&lt;strong&gt;本章涵盖内容&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;使用&lt;strong&gt;泛型类型&lt;/strong&gt;和&lt;strong&gt;泛型方法&lt;/strong&gt;编写灵活、安全的代码&lt;/li&gt;
+&lt;li&gt;用&lt;strong&gt;可空值类型&lt;/strong&gt;表示信息的缺失&lt;/li&gt;
+&lt;li&gt;以相对简单的方式构建&lt;strong&gt;委托&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;实现&lt;strong&gt;迭代器&lt;/strong&gt;而无需编写样板代码&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;如果你的C#经验足够久远，本章将提醒我们已走了多远，并让你由衷感激一支专注而智慧的语言设计团队。如果你从未在没有泛型的情况下编写过C#，你最终可能会疑惑：没有这些特性，C#当初是如何流行起来的？无论如何，你仍可能在这里发现未曾了解的特性或从未思考过的细节。&lt;/p&gt;
+&lt;p&gt;C# 2 发布（随 Visual Studio 2005）已逾十年，因此要为我们后视镜中的特性感到兴奋可能并不容易。但你不应低估它当时发布的重要性。升级过程也是痛苦的：从 C# 1 和 .NET 1.x 升级到 C# 2 和 .NET 2.0 在业界花费了很长时间才完成。随后的演进则快速得多。C# 2 的第一个特性，也是几乎所有开发者认为最重要的特性，便是：&lt;strong&gt;泛型&lt;/strong&gt;。&lt;/p&gt;
+&lt;h1 id="泛型"&gt;泛型&lt;a class="anchor" href="#%e6%b3%9b%e5%9e%8b"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;泛型允许你编写通用代码，这些代码在编译时是类型安全的，可以在多个位置使用相同的类型，而无需预先知道该具体类型是什么。泛型最初引入时，主要用于集合，但在现代 C# 代码中，它们无处不在。它们可能最常被用于以下方面：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;集合&lt;/strong&gt;（它们在集合中一如既往地有用）&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;委托&lt;/strong&gt;，特别是在 LINQ 中&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;异步代码&lt;/strong&gt;，其中 &lt;code&gt;Task&amp;lt;T&amp;gt;&lt;/code&gt; 表示一个未来类型为 &lt;code&gt;T&lt;/code&gt; 的值的承诺&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;可空值类型&lt;/strong&gt;，我将在 2.2 节中详细讨论&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;这绝非其用途的全部，但仅这四点就意味着 C# 程序员每天都在使用泛型。&lt;strong&gt;集合&lt;/strong&gt;提供了解释泛型益处的最简单方式，因为你可以对比 .NET 1 中的集合和 .NET 2 中的泛型集合。&lt;/p&gt;
+&lt;blockquote class='book-hint '&gt;
+&lt;p&gt;&lt;strong&gt;核心价值&lt;/strong&gt;：泛型的核心优势在于&lt;strong&gt;编译时类型安全&lt;/strong&gt;和&lt;strong&gt;代码复用&lt;/strong&gt;。它通过将类型参数化，使得一段逻辑可以服务于多种具体类型，同时编译器能进行严格的类型检查，避免了运行时的类型转换错误，这是与非泛型代码（如使用 &lt;code&gt;object&lt;/code&gt; 的集合）的本质区别。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;应用场景的扩展&lt;/strong&gt;：作者列举的四个场景清晰地展示了泛型如何从最初的“集合工具”演变为C#类型系统的&lt;strong&gt;基石性构造块&lt;/strong&gt;：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;集合&lt;/strong&gt;：解决了 &lt;code&gt;ArrayList&lt;/code&gt; 等非泛型集合的装箱拆箱和类型安全问题。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;委托（如 &lt;code&gt;Func&amp;lt;T&amp;gt;&lt;/code&gt;，&lt;code&gt;Action&amp;lt;T&amp;gt;&lt;/code&gt;）&lt;/strong&gt;：为高阶函数和LINQ提供了类型安全的函数抽象。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;异步（&lt;code&gt;Task&amp;lt;T&amp;gt;&lt;/code&gt;）&lt;/strong&gt;：将异步操作与其结果类型优雅地绑定。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;可空值类型（&lt;code&gt;Nullable&amp;lt;T&amp;gt;&lt;/code&gt;）&lt;/strong&gt;：为值类型体系增加了“值缺失”的语义。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/blockquote&gt;&lt;h2 id="通过示例入门泛型之前的集合"&gt;&lt;strong&gt;通过示例入门：泛型之前的集合&lt;/strong&gt;&lt;a class="anchor" href="#%e9%80%9a%e8%bf%87%e7%a4%ba%e4%be%8b%e5%85%a5%e9%97%a8%e6%b3%9b%e5%9e%8b%e4%b9%8b%e5%89%8d%e7%9a%84%e9%9b%86%e5%90%88"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;.NET 1 主要存在三类集合：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;数组&lt;/strong&gt; —— 它们直接得到语言和运行时的支持。大小在初始化时固定。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;基于对象的集合&lt;/strong&gt; —— 值（以及相关的键）在 API 中使用 &lt;code&gt;System.Object&lt;/code&gt; 来描述。它们没有特定于集合的语言或运行时支持，但可以使用索引器和 &lt;code&gt;foreach&lt;/code&gt; 语句等语言特性。&lt;code&gt;ArrayList&lt;/code&gt; 和 &lt;code&gt;Hashtable&lt;/code&gt; 是最常用的例子。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;专用集合&lt;/strong&gt; —— 值在 API 中用特定类型描述，该集合只能用于该类型。例如，&lt;code&gt;StringCollection&lt;/code&gt; 是一个字符串集合；其 API 看起来类似 &lt;code&gt;ArrayList&lt;/code&gt;，但在任何涉及值的地方都使用 &lt;code&gt;String&lt;/code&gt; 而不是 &lt;code&gt;Object&lt;/code&gt;。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;数组和专用集合是&lt;strong&gt;静态类型&lt;/strong&gt;的，我指的是 API 会阻止你将错误类型的值放入集合，并且当你从集合中获取值时，你不需要将结果强制转换回你期望的类型。&lt;/p&gt;</description></item><item><title>C#4</title><link>https://zimang.fun/my2026/2trans/csharp_in_depth/p2/csharp4/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://zimang.fun/my2026/2trans/csharp_in_depth/p2/csharp4/</guid><description>&lt;p&gt;&lt;strong&gt;本章涵盖内容&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;使用动态类型实现互操作性和简化反射&lt;/li&gt;
+&lt;li&gt;为参数提供默认值，使调用方无需指定它们&lt;/li&gt;
+&lt;li&gt;为参数指定名称以使调用更清晰&lt;/li&gt;
+&lt;li&gt;以更简化的方式编写针对 COM 库的代码&lt;/li&gt;
+&lt;li&gt;通过泛型变体在泛型类型之间进行转换&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;C# 4 是一个有趣的版本。最引人注目的变化是引入了带有 &lt;code&gt;dynamic&lt;/code&gt; 类型的动态类型。这一特性使 C# 在同一语言中既是静态类型化的（对于大多数代码），又是动态类型化的（当使用 &lt;code&gt;dynamic&lt;/code&gt; 时）。这在编程语言中是罕见的。&lt;/p&gt;
+&lt;p&gt;动态类型的引入是为了互操作性，但事实证明，这对于许多开发人员的日常工作中并不常见。其他版本中的主要特性（泛型、LINQ、async/await）已成为大多数 C# 开发人员工具包的自然组成部分，但动态类型仍然相对较少使用。我相信它对需要它的人来说是有用的，至少它是一个有趣的特性。&lt;/p&gt;
+&lt;p&gt;C# 4 中的其他特性也改善了互操作性，特别是与 COM 的互操作。有些改进是特定于 COM 的，例如命名索引器、隐式 &lt;code&gt;ref&lt;/code&gt; 参数和嵌入式互操作类型。可选参数和命名参数对于 COM 很有用，但它们也可以在纯托管代码中使用。这两个是我日常使用的 C# 4 特性。&lt;/p&gt;
+&lt;p&gt;最后，C# 4 公开了从 CLR v2（第一个包含泛型的运行时版本）就已存在的泛型特性。泛型变体既简单又复杂。乍一看，它似乎很明显：例如，一个字符串序列显然是一个对象序列。但随后我们发现，字符串列表并不是对象列表，这打破了一些开发人员的期望。这是一个有用的特性，但当你仔细研究它时，很容易让人头痛。大多数时候，你甚至可以在没有意识到的情况下利用它。希望本章的介绍能让你在代码未按预期工作而需要更深入研究时，能够很好地解决问题而不感到困惑。我们将从动态类型开始。&lt;/p&gt;
+&lt;h1 id="动态类型"&gt;动态类型&lt;a class="anchor" href="#%e5%8a%a8%e6%80%81%e7%b1%bb%e5%9e%8b"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;有些特性伴随着大量新语法，但解释完语法后，就没有太多可说的了。动态类型则恰恰相反：语法极其简单，但我可以几乎无休止地详细说明其影响和实现。本节将向你展示基础知识，然后介绍一些细节，最后就如何使用和何时使用动态类型提出一些建议。&lt;/p&gt;
+&lt;h2 id="动态类型简介"&gt;动态类型简介&lt;a class="anchor" href="#%e5%8a%a8%e6%80%81%e7%b1%bb%e5%9e%8b%e7%ae%80%e4%bb%8b"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;让我们从一个例子开始。以下清单展示了两种从文本中获取子字符串的尝试。目前，我并不打算解释为什么要使用动态类型，只说明它的作用。&lt;/p&gt;
+&lt;p&gt;清单 4.1 使用动态类型获取子字符串&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-csharp" data-lang="csharp"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;dynamic&lt;/span&gt; text = &lt;span style="color:#e6db74"&gt;&amp;#34;hello world&amp;#34;&lt;/span&gt;; &lt;span style="color:#75715e"&gt;// 声明一个 dynamic 类型的变量&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;string&lt;/span&gt; world = text.Substring(&lt;span style="color:#ae81ff"&gt;6&lt;/span&gt;); &lt;span style="color:#75715e"&gt;// 调用 Substring 方法；这可行。&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Console.WriteLine(world);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;string&lt;/span&gt; broken = text.SUBSTR(&lt;span style="color:#ae81ff"&gt;6&lt;/span&gt;); &lt;span style="color:#75715e"&gt;// 尝试调用 SUBSTR；这将抛出异常。&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Console.WriteLine(broken);&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;对于如此少量的代码，这里发生了很多事情。最重要的方面是它竟然能够编译。如果你将第一行改为使用 &lt;code&gt;string&lt;/code&gt; 类型声明 &lt;code&gt;text&lt;/code&gt;，那么对 &lt;code&gt;SUBSTR&lt;/code&gt; 的调用将在编译时失败。相反，编译器很乐意编译它，甚至不查找名为 &lt;code&gt;SUBSTR&lt;/code&gt; 的方法。它也不查找 &lt;code&gt;Substring&lt;/code&gt;。相反，这两个查找都在运行时执行。&lt;/p&gt;</description></item><item><title>C#中的协变与逆变：数组协变性</title><link>https://zimang.fun/my2026/2trans/csharp_in_depth/p2/covariance_and_contravariance_in_csharp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://zimang.fun/my2026/2trans/csharp_in_depth/p2/covariance_and_contravariance_in_csharp/</guid><description>&lt;h1 id="c中的协变与逆变数组协变性"&gt;&lt;a href="https://learn.microsoft.com/zh-cn/archive/blogs/ericlippert/covariance-and-contravariance-in-c-part-two-array-covariance"&gt;C#中的协变与逆变：数组协变性&lt;/a&gt;&lt;a class="anchor" href="#c%e4%b8%ad%e7%9a%84%e5%8d%8f%e5%8f%98%e4%b8%8e%e9%80%86%e5%8f%98%e6%95%b0%e7%bb%84%e5%8d%8f%e5%8f%98%e6%80%a7"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;C# 通过两种方式实现变体。今天要讲的是有缺陷的那种。&lt;/p&gt;
+&lt;p&gt;自 C# 1.0 起，元素类型为引用类型的数组就是协变的。下面这段代码完全合法：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-c#" data-lang="c#"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Animal[] animals = &lt;span style="color:#66d9ef"&gt;new&lt;/span&gt; Giraffe[&lt;span style="color:#ae81ff"&gt;10&lt;/span&gt;];&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;由于 Giraffe 比 Animal 小，而“创建数组”是一个对类型的协变操作，所以 Giraffe[] 比 Animal[] 小，因此其实例可以放入该变量中。&lt;/p&gt;
+&lt;p&gt;不幸的是，这种特定的协变是有缺陷的。它被添加到 CLR 是因为 Java 需要它，而 CLR 设计者希望能够支持类 Java 语言。我们随后又将其添加到 C# 中，因为它已在 CLR 中。这个决定在当时颇具争议，我也对此不太满意，但现在我们已经无能为力了。&lt;/p&gt;
+&lt;p&gt;为什么说它有缺陷呢？因为将 Turtle 放入 Animal 数组通常应该是合法的。在语言和运行时中启用数组协变后，你无法保证 Animal 数组能够接受 Turtle，因为其底层存储可能实际上是一个 Giraffe 数组。&lt;/p&gt;
+&lt;p&gt;这意味着，我们将一个原本可以由编译器捕获的错误，变成了一个只能在运行时捕获的错误。这也意味着，每次向数组放入对象时，我们都必须进行运行时检查以确保类型匹配，否则就抛出异常。如果你要向数组中放入海量数据，这可能会带来巨大的开销。&lt;/p&gt;
+&lt;p&gt;唉。&lt;/p&gt;
+&lt;p&gt;不幸的是，我们现在只能接受这个现实。Giraffe[] 比 Animal[] 小，事实就是如此。&lt;/p&gt;
+&lt;p&gt;我想借此机会澄清一下在&lt;strong&gt;第一部分&lt;/strong&gt;评论中提出的一些观点。&lt;/p&gt;
+&lt;p&gt;首先，我所说的“子类型”和“超类型”，对于类是指“在基类链上”，对于接口是指“在基接口树上”。我并非指更广泛的“可替代”概念。而对于“比…大”和“比…小”，我明确指&lt;strong&gt;不是&lt;/strong&gt;“是…的超类型”和“是…的子类型”。确实，每个子类都比其超类小，但反之则不成立。也就是说，并非每个更小的类型都是其更大类型的子类型。Giraffe[] 比 Animal[] 和 System.Array 都小。显然 Giraffe[] 是 System.Array 的子类型，但它&lt;strong&gt;绝对不是&lt;/strong&gt; Animal[] 的子类型。因此，我定义的“比…小”关系比“是一种”关系更普遍。我想区分赋值兼容性（比…小）和继承（是…的子类型）。&lt;/p&gt;
+&lt;p&gt;下次我们将讨论在 C# 2.0 中添加的一种没有缺陷的变体。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;评论&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;匿名
+&lt;ul&gt;
+&lt;li&gt;2007年10月17日&lt;/li&gt;
+&lt;li&gt;来自 &lt;a href="http://www.artofbam.com/wordpress/?p=9671"&gt;http://www.artofbam.com/wordpress/?p=9671&lt;/a&gt; 的 PingBack&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;匿名
+&lt;ul&gt;
+&lt;li&gt;2007年10月17日&lt;/li&gt;
+&lt;li&gt;我刚刚偶然发现了上面那样的代码。读完这篇文章后，我现在觉得需要为它添加验证。我很好奇，有没有办法阻止/避免编写那样的代码，或者在前面就检查出你正在向一个巨嘴鸟数组中加入鹦鹉（它们的尺寸可能相同）？&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;匿名
+&lt;ul&gt;
+&lt;li&gt;2007年10月17日&lt;/li&gt;
+&lt;li&gt;如果有一个密封类型的数组，它还会进行运行时类型检查吗？&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;匿名
+&lt;ul&gt;
+&lt;li&gt;2007年10月17日&lt;/li&gt;
+&lt;li&gt;可能不会，但我不是 JIT 专家。为什么不两种方式都试试，在调试器中检查 JIT 编译后的代码呢？那样你就知道了。请记住，你需要在 JIT 编译完成后将调试器附加到 JIT 编译后的代码上。JIT 编译器在检测到编译过程正在进行调试时，可能会生成对调试器更友好的代码。这可能包括关闭某些优化。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;匿名
+&lt;ul&gt;
+&lt;li&gt;2007年10月17日&lt;/li&gt;
+&lt;li&gt;以下情况应该如何处理？ &lt;code&gt;Giraffe[] giraffes = new Giraffe[10]; ... // 其他地方 Animal[] animals = giraffes;&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;匿名
+&lt;ul&gt;
+&lt;li&gt;2007年10月17日&lt;/li&gt;
+&lt;li&gt;这完全合法，因为 giraffes 的类型比 Animal[] 小。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;匿名
+&lt;ul&gt;
+&lt;li&gt;2007年10月17日&lt;/li&gt;
+&lt;li&gt;该评论已被删除&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;匿名
+&lt;ul&gt;
+&lt;li&gt;2007年10月17日&lt;/li&gt;
+&lt;li&gt;你有点预见到我们接下来要讨论的内容了。再过几篇文章，我将提议在 C# 的未来版本中为接口添加那种变体。总的来说，不可变性当然有助于事物更具变体性。正如我们在后续几篇文章中将看到的，由于不可变对象根据定义是只读的，并且参数仅在“输出”侧出现时可以是协变的，因此，如果在类型系统中存在协变性，就很容易创建协变的不可变数据结构。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;匿名
+&lt;ul&gt;
+&lt;li&gt;2007年10月17日&lt;/li&gt;
+&lt;li&gt;我的调试技巧不算特别厉害，但编译后的程序版本（.Net 2.0）无论数组的元素类型是否密封，似乎都执行完全相同的赋值操作。恐怕我们无法摆脱对引用类型元素类型的数组进行运行时类型检查了。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;匿名
+&lt;ul&gt;
+&lt;li&gt;2007年10月17日&lt;/li&gt;
+&lt;li&gt;你好 Eric :-) 这篇文章的一个链接现在正发布在 &lt;a href="https://programming.reddit.com"&gt;programming.reddit.com&lt;/a&gt; 上，标题是“将乌龟放入动物数组应该始终合法”。当我看到标题和 &lt;a href="https://blogs.msdn.com"&gt;blogs.msdn.com&lt;/a&gt; 时，我心想：“这一定是 Eric Lippert 发的帖子”。我猜对了 :-) 最近怎么样？（明天风暴就要来了，你打算试试风帆冲浪吗？据说风速超过 50 英里/小时&amp;hellip;） 我的项目最终对任何人有用吗？:-X&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;匿名
+&lt;ul&gt;
+&lt;li&gt;2007年10月17日&lt;/li&gt;
+&lt;li&gt;这实际上不是协变。能接受 Giraffe 的消费者类型“小于”能接受 Animal 的消费者类型：如果一个消费者能接受 Animal，那么它就能接受 Giraffe，但反之则不成立。例如，Giraffe 的只写数组类型应该是 Animal 的只写数组类型的子类型。能产生 Giraffe 的生产者类型“大于”能产生 Animal 的生产者类型：如果一个生产者能产生 Giraffe，那么它就能产生 Animal。例如，Animal 的只读数组类型应该是 Giraffe 的只读数组类型的子类型。由于一个数组既可以产生（例如 animals[0]）也可以消费（例如 animals[0]=myanimal），Animal[] 应该既不是 Giraffe[] 的子类型，也不是它的超类型。所以，关于如何处理以下问题：&lt;code&gt;Giraffe[] giraffes = new Giraffe[10];&lt;/code&gt; 我说应该用编译时错误来处理。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;匿名
+&lt;ul&gt;
+&lt;li&gt;2007年10月17日&lt;/li&gt;
+&lt;li&gt;我同意你所说的这种情况非常烦人。然而，我们只能接受它。不过，它确实是协变。我有一个类型上的偏序关系（CLR 赋值兼容性）和一个从类型到类型的操作符（“创建数组类型”），这个操作符保持了该顺序。这就是“协变操作符”的定义。也许你更喜欢用“始终类型安全的 Liskov 风格替换”作为偏序关系的基础，而不是我选择的这个有时不类型安全的顺序。如果你选择那个偏序关系，那么我同意你的观点，创建数组不是协变的。但在这个系列文章中，我并没有选择那个偏序关系。你们理论派似乎决心要否定我今天选择的偏序关系。这当然是你的权利，但既然我是那个必须在针对 CLR 的编译器中实现这个的人，选择“CLR 中的赋值兼容性”对我来说是一个非常务实的选择。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;匿名
+&lt;ul&gt;
+&lt;li&gt;2007年10月18日&lt;/li&gt;
+&lt;li&gt;如果没有 C# 中实现的这种协变性，我该如何编写像这样的函数： &lt;code&gt;static bool ArrayEquals(object[] a, object[] b) { if (a.Length != b.Length) return false; for (int i = 0; i &amp;lt; a.Length; i++) if (!a[i].Equals(b[i])) return false; return true; }&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;匿名
+&lt;ul&gt;
+&lt;li&gt;2007年10月18日&lt;/li&gt;
+&lt;li&gt;问得好。在这种情况下，协变是完全安全的，因为你在此方法中将数组视为只读的。只有当你试图向数组写入时才会出现潜在问题，而你这里并没有这样做。获得安全协变的方法是将只读操作分离到接口中并使它们协变。如果你编写的程序接受两个 &lt;code&gt;IEnumerable&amp;lt;object&amp;gt;&lt;/code&gt; 对象，并且我们能够以某种方式使 &lt;code&gt;IEnumerable&amp;lt;T&amp;gt;&lt;/code&gt; 在 T 上协变，那么这将完全是类型安全的。IEnumerable 不允许你写入对象，只能从中读取，因此它对于协变是安全的。然后你就可以将你的 &lt;code&gt;IEnumerable&amp;lt;Giraffe&amp;gt;&lt;/code&gt; 和 &lt;code&gt;IEnumerable&amp;lt;Animal&amp;gt;&lt;/code&gt; 传递给该函数，一切都会正常。当然，我刚刚泄露了惊喜；这正是这个系列文章将要讨论的内容。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;匿名
+&lt;ul&gt;
+&lt;li&gt;2007年10月18日&lt;/li&gt;
+&lt;li&gt;为了详细说明我最初的例子，以下代码应该抛出编译时错误、运行时错误，还是进行写时复制？我真的很想知道你认为正确的方式是什么。我最近一直在研究代数数据类型，并思考 ADT 和对象之间的差异，以及各自适用的场景。到目前为止，我总结出的实用经验法则是：如果你发现自己正在做 RTTI，那么那个对象层次结构本应该用 ADT 来表示。&lt;code&gt;Giraffe[] giraffes = new Giraffe[10]; ... // 其他地方 Animal[] animals = giraffes; ... animals.append(new Turtle()); /* 不确定这是否是有效的 C#，但你应该明白我的意思 */&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;匿名
+&lt;ul&gt;
+&lt;li&gt;2007年10月28日&lt;/li&gt;
+&lt;li&gt;欢迎阅读社区动态第三十四期。这是一个团队处于过渡时期的时刻。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;匿名
+&lt;ul&gt;
+&lt;li&gt;2007年10月28日&lt;/li&gt;
+&lt;li&gt;欢迎阅读社区动态第三十四期。这是一个团队处于过渡时期的时刻。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;匿名
+&lt;ul&gt;
+&lt;li&gt;2008年12月18日&lt;/li&gt;
+&lt;li&gt;如此精彩地，Eric Lippert 为“协变与逆变”步步推进地撰写了博客，作为“精彩系列…&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;匿名
+&lt;ul&gt;
+&lt;li&gt;2009年5月19日&lt;/li&gt;
+&lt;li&gt;在最近两篇文章中，我讨论了 C# 已经拥有的两种变体——数组协变和…&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;匿名
+&lt;ul&gt;
+&lt;li&gt;2012年9月18日&lt;/li&gt;
+&lt;li&gt;我个人很喜欢数组协变性，并且希望泛型列表也是协变的。如果 IEnumerable 能够像列表一样可寻址，那么语法上会更易接受。换句话说，如果你不想要数组协变性，一个专门的 IReadableList 可能很有价值。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;</description></item><item><title>异步实现</title><link>https://zimang.fun/my2026/2trans/csharp_in_depth/p2/async_imp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://zimang.fun/my2026/2trans/csharp_in_depth/p2/async_imp/</guid><description>&lt;p&gt;本章内容包括：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;异步代码的结构&lt;/li&gt;
+&lt;li&gt;与框架中的 builder 类型进行交互&lt;/li&gt;
+&lt;li&gt;在 async 方法中执行单个步骤&lt;/li&gt;
+&lt;li&gt;理解执行上下文在 &lt;code&gt;await&lt;/code&gt; 表达式之间的流动&lt;/li&gt;
+&lt;li&gt;与自定义任务类型进行交互&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;我清楚地记得 2010 年 10 月 28 日那个夜晚。Anders Hejlsberg 正在 PDC 上介绍 &lt;code&gt;async/await&lt;/code&gt;，就在他的演讲开始前不久，一大批可下载的资料被发布出来，其中包括 C# 规范变更的草案、C# 5 编译器的一个社区技术预览版（CTP），以及 Anders 演讲所用的幻灯片。在某个时刻，我一边在线观看演讲，一边浏览幻灯片，同时在安装 CTP。等 Anders 讲完时，我已经开始编写 async 代码并进行各种尝试了。&lt;/p&gt;
+&lt;p&gt;在接下来的几周里，我开始拆解这些内容，仔细研究编译器究竟生成了哪些代码，尝试自己写一个与 CTP 自带库类似的、极其简化的实现，并从各个角度对它进行探索。随着新版本的发布，我逐渐弄清楚发生了哪些变化，也越来越熟悉幕后发生的一切。我看到得越多，就越能体会到编译器愿意替我们生成多少样板代码。这就像在显微镜下观察一朵美丽的花：美感依然存在，但你会发现其中蕴含的东西远比第一眼看到的要丰富得多。&lt;/p&gt;
+&lt;p&gt;当然，并不是每个人都像我这样。如果你只是想依赖我之前描述过的行为，单纯相信编译器会把事情做好，那也完全没问题。或者，你也可以暂时跳过这一章，等以后再回来看；本书后续的内容并不依赖这一章。你几乎不太可能需要把代码调试到本章所讨论的这种层次，但我相信这一章能让你更深入地理解 &lt;code&gt;async/await&lt;/code&gt; 是如何组合在一起的。在看过生成的代码之后，无论是 &lt;em&gt;awaitable pattern&lt;/em&gt;，还是自定义任务类型的要求，都会变得更加容易理解。&lt;/p&gt;
+&lt;p&gt;我不想把这件事说得太玄，但研究这些实现细节确实能在语言和开发者之间建立一种更深层次的联系。&lt;/p&gt;
+&lt;p&gt;作为一种粗略的近似，我们可以假装 C# 编译器是把使用了 &lt;code&gt;async/await&lt;/code&gt; 的 C# 代码，转换成不使用 &lt;code&gt;async/await&lt;/code&gt; 的 C# 代码。当然，编译器实际上是在更低的层面上工作，使用中间表示并最终生成 IL。事实上，在 &lt;code&gt;async/await&lt;/code&gt; 的某些方面，生成的 IL 根本无法用普通的 C# 表达出来，但这些地方解释起来并不困难。&lt;/p&gt;
+&lt;blockquote class='book-hint '&gt;
+&lt;p&gt;&lt;strong&gt;Debug 与 Release 构建的差异，以及未来可能的变化&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;在撰写本章时，我注意到 async 代码在 Debug 构建和 Release 构建之间存在差异：在 Debug 构建中，生成的状态机是类（class），而不是结构体（struct）。（这是为了提供更好的调试体验，尤其是在“编辑并继续”（Edit and Continue）场景中更为灵活。）在我写第三版时并非如此；编译器的实现已经发生了变化，而且未来也可能再次改变。如果你反编译由 C# 8 编译器生成的 async 代码，它的形式可能会与这里展示的内容略有不同。&lt;/p&gt;</description></item><item><title>编写异步代码</title><link>https://zimang.fun/my2026/2trans/csharp_in_depth/p2/writing_asynchronous_code/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://zimang.fun/my2026/2trans/csharp_in_depth/p2/writing_asynchronous_code/</guid><description>&lt;p&gt;&lt;strong&gt;本章涵盖&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;异步代码编写的含义&lt;/li&gt;
+&lt;li&gt;用 &lt;code&gt;async&lt;/code&gt; 修饰符声明异步方法&lt;/li&gt;
+&lt;li&gt;用 &lt;code&gt;await&lt;/code&gt; 操作符进行异步等待&lt;/li&gt;
+&lt;li&gt;C# 5 以来 &lt;code&gt;async/await&lt;/code&gt; 的语言演进&lt;/li&gt;
+&lt;li&gt;异步代码的使用准则&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;多年来，异步编程一直是开发者的痛点。众所周知，它能避免在等待耗时操作时阻塞线程，但正确实现它却令人头疼。&lt;/p&gt;
+&lt;p&gt;即使在 .NET 框架（从宏观看仍相对年轻）中，我们也经历了三种试图简化此过程的模型：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;.NET 1.x 的 &lt;strong&gt;BeginFoo/EndFoo&lt;/strong&gt; 模式，使用 &lt;code&gt;IAsyncResult&lt;/code&gt; 和 &lt;code&gt;AsyncCallback&lt;/code&gt; 传递结果。&lt;/li&gt;
+&lt;li&gt;.NET 2.0 的&lt;strong&gt;基于事件的异步模式&lt;/strong&gt;，如 &lt;code&gt;BackgroundWorker&lt;/code&gt; 和 &lt;code&gt;WebClient&lt;/code&gt; 的实现。&lt;/li&gt;
+&lt;li&gt;.NET 4.0 引入并在 .NET 4.5 扩展的&lt;strong&gt;任务并行库&lt;/strong&gt;。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;尽管 TPL 设计卓越，但用它编写健壮、可读的异步代码仍很困难。虽然其对并行的支持很好，但异步编程的某些方面更适合在语言层面而非单纯在库中解决。&lt;/p&gt;
+&lt;p&gt;C# 5 的核心特性通常称为 &lt;strong&gt;async/await&lt;/strong&gt;，它构建于 TPL 之上。它允许你编写形似同步、却在适当时机使用异步的代码。曾经的回调嵌套、事件订阅和零散的错误处理已不复存在；取而代之的是，异步代码能清晰表达其意图，并以开发者熟悉的结构为基础。C# 5 引入的语言构造允许你 &lt;strong&gt;&lt;code&gt;await&lt;/code&gt;&lt;/strong&gt; 一个异步操作。这种“等待”看起来很像普通的阻塞调用——在操作完成前后续代码不会执行，但其神奇之处在于能在不阻塞当前线程的情况下做到这一点。如果这听起来完全矛盾，别担心，本章会让你豁然开朗。&lt;/p&gt;
+&lt;p&gt;为简化起见，我在介绍原始 C# 5 功能的同时，也包含了 C# 6 和 C# 7 的新特性，并标明了变化点。&lt;/p&gt;
+&lt;p&gt;.NET Framework 4.5 版全面拥抱异步，大量操作都提供了遵循&lt;strong&gt;基于任务的异步模式&lt;/strong&gt;的异步版本，确保了跨 API 的一致性体验。同样，作为通用 Windows 应用基础的 &lt;strong&gt;Windows 运行时平台&lt;/strong&gt;，强制要求所有长时间运行（或可能长时间运行）的操作必须是异步的。许多现代 API 也重度依赖异步，如 Roslyn 和 HttpClient。简言之，大多数 C# 开发者都至少会在部分工作中用到异步。&lt;/p&gt;</description></item><item><title>迭代器块实现细节：自动生成的状态机</title><link>https://zimang.fun/my2026/2trans/csharp_in_depth/p2/iterator_block_implementation_details/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://zimang.fun/my2026/2trans/csharp_in_depth/p2/iterator_block_implementation_details/</guid><description>&lt;p&gt;迭代器块实现细节：自动生成的状态机&lt;/p&gt;
+&lt;h1 id="引言"&gt;引言&lt;a class="anchor" href="#%e5%bc%95%e8%a8%80"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;自 .NET 首次发布以来，迭代器就已经存在，但 C# 2 通过迭代器块让它们变得易于实现。本文将深入探讨微软 C# 编译器如何将迭代器块转换为状态机的细节。如果你对 &lt;code&gt;IEnumerable&lt;/code&gt; 和 &lt;code&gt;IEnumerator&lt;/code&gt; 接口（及其泛型对应物）或迭代器块的基础知识不太确定，建议在继续阅读本文之前，先阅读详细介绍这些内容的文章（或《C# in Depth》的第 6 章，这是免费样章）。&lt;/p&gt;
+&lt;p&gt;本文几乎所有的内容都是实现特定的。例如，Mono 编译器可能以略有不同的方式处理事情，但很可能非常相似；当不确定可以依赖什么时，请查阅语言规范（C# 3.0 规范的第 10.14 节涵盖了迭代器块）。&lt;/p&gt;
+&lt;h1 id="高级概述模式是什么"&gt;高级概述：模式是什么？&lt;a class="anchor" href="#%e9%ab%98%e7%ba%a7%e6%a6%82%e8%bf%b0%e6%a8%a1%e5%bc%8f%e6%98%af%e4%bb%80%e4%b9%88"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;这篇文章最初是因为一位读者询问了用于返回 &lt;code&gt;IEnumerator&lt;/code&gt; 的方法与返回 &lt;code&gt;IEnumerable&lt;/code&gt; 的方法使用迭代器块的区别而产生的。此外，还存在非泛型接口和泛型接口之间的选择。我们将从为四种可能性中的每一种使用相同的迭代器块开始，并查看生成代码的差异。在整篇文章中，我将展示编译器生成的代码的 C# 等效形式。显然，编译器实际上并不生成 C#，但我使用 Reflector 将代码反编译为 C#。&lt;/p&gt;
+&lt;p&gt;我们的第一个示例将按顺序产生数字 0 到 9。最初我们将方法声明为返回非泛型 &lt;code&gt;IEnumerator&lt;/code&gt;。以下是完整的代码：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-csharp" data-lang="csharp"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;using&lt;/span&gt; System;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;using&lt;/span&gt; System.Collections;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Test&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;static&lt;/span&gt; IEnumerator GetCounter()
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;for&lt;/span&gt; (&lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; count = &lt;span style="color:#ae81ff"&gt;0&lt;/span&gt;; count &amp;lt; &lt;span style="color:#ae81ff"&gt;10&lt;/span&gt;; count++)
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;yield&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; count;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;很简单，对吧？那么，让我们看看编译后它变成了什么。屏住呼吸&amp;hellip;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-csharp" data-lang="csharp"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;internal&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Test&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// 注意这里没有执行我们原始代码的任何部分&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;static&lt;/span&gt; IEnumerator GetCounter()
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;new&lt;/span&gt; &amp;lt;GetCounter&amp;gt;d__0(&lt;span style="color:#ae81ff"&gt;0&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// 编译器自动创建的嵌套类型，用于实现迭代器&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt; [CompilerGenerated]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;sealed&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &amp;lt;GetCounter&amp;gt;d__0 : IEnumerator&amp;lt;&lt;span style="color:#66d9ef"&gt;object&lt;/span&gt;&amp;gt;, IEnumerator, IDisposable
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// 字段：总会有一个 &amp;#34;state&amp;#34; 和 &amp;#34;current&amp;#34;，但 &amp;#34;count&amp;#34; 来自我们迭代器块中的局部变量&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; &amp;lt;&amp;gt;&lt;span style="color:#ae81ff"&gt;1__&lt;/span&gt;state;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;object&lt;/span&gt; &amp;lt;&amp;gt;&lt;span style="color:#ae81ff"&gt;2__&lt;/span&gt;current;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; &amp;lt;count&amp;gt;&lt;span style="color:#ae81ff"&gt;5__1&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt; [DebuggerHidden]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &amp;lt;GetCounter&amp;gt;d__0(&lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; &amp;lt;&amp;gt;&lt;span style="color:#ae81ff"&gt;1__&lt;/span&gt;state)
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;this&lt;/span&gt;.&amp;lt;&amp;gt;&lt;span style="color:#ae81ff"&gt;1__&lt;/span&gt;state = &amp;lt;&amp;gt;&lt;span style="color:#ae81ff"&gt;1__&lt;/span&gt;state;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// 几乎所有实际工作都在这里发生&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;bool&lt;/span&gt; MoveNext()
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;switch&lt;/span&gt; (&lt;span style="color:#66d9ef"&gt;this&lt;/span&gt;.&amp;lt;&amp;gt;&lt;span style="color:#ae81ff"&gt;1__&lt;/span&gt;state)
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;case&lt;/span&gt; &lt;span style="color:#ae81ff"&gt;0&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;this&lt;/span&gt;.&amp;lt;&amp;gt;&lt;span style="color:#ae81ff"&gt;1__&lt;/span&gt;state = -&lt;span style="color:#ae81ff"&gt;1&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;this&lt;/span&gt;.&amp;lt;count&amp;gt;&lt;span style="color:#ae81ff"&gt;5__1&lt;/span&gt; = &lt;span style="color:#ae81ff"&gt;0&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;while&lt;/span&gt; (&lt;span style="color:#66d9ef"&gt;this&lt;/span&gt;.&amp;lt;count&amp;gt;&lt;span style="color:#ae81ff"&gt;5__1&lt;/span&gt; &amp;lt; &lt;span style="color:#ae81ff"&gt;10&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;this&lt;/span&gt;.&amp;lt;&amp;gt;&lt;span style="color:#ae81ff"&gt;2__&lt;/span&gt;current = &lt;span style="color:#66d9ef"&gt;this&lt;/span&gt;.&amp;lt;count&amp;gt;&lt;span style="color:#ae81ff"&gt;5__1&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;this&lt;/span&gt;.&amp;lt;&amp;gt;&lt;span style="color:#ae81ff"&gt;1__&lt;/span&gt;state = &lt;span style="color:#ae81ff"&gt;1&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;true&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; Label_004B:
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;this&lt;/span&gt;.&amp;lt;&amp;gt;&lt;span style="color:#ae81ff"&gt;1__&lt;/span&gt;state = -&lt;span style="color:#ae81ff"&gt;1&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;this&lt;/span&gt;.&amp;lt;count&amp;gt;&lt;span style="color:#ae81ff"&gt;5__1&lt;/span&gt;++;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;break&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;case&lt;/span&gt; &lt;span style="color:#ae81ff"&gt;1&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;goto&lt;/span&gt; Label_004B;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;false&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt; [DebuggerHidden]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;void&lt;/span&gt; IEnumerator.Reset()
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;throw&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;new&lt;/span&gt; NotSupportedException();
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;void&lt;/span&gt; IDisposable.Dispose()
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;object&lt;/span&gt; IEnumerator&amp;lt;&lt;span style="color:#66d9ef"&gt;object&lt;/span&gt;&amp;gt;.Current
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt; [DebuggerHidden]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;get&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;this&lt;/span&gt;.&amp;lt;&amp;gt;&lt;span style="color:#ae81ff"&gt;2__&lt;/span&gt;current;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;object&lt;/span&gt; IEnumerator.Current
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt; [DebuggerHidden]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;get&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;this&lt;/span&gt;.&amp;lt;&amp;gt;&lt;span style="color:#ae81ff"&gt;2__&lt;/span&gt;current;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;我们将从较高层次开始了解发生了什么，解释每个成员。真正的工作是在 &lt;code&gt;MoveNext()&lt;/code&gt; 中完成的，所以我们先略过这一部分，当我们对代码的其他部分满意后，再深入探讨这个方法。从上到下查看代码，以下是连续注释：&lt;/p&gt;</description></item><item><title>C# 3: LINQ and everything that comes with it</title><link>https://zimang.fun/my2026/2trans/csharp_in_depth/p2/csharp3/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://zimang.fun/my2026/2trans/csharp_in_depth/p2/csharp3/</guid><description>&lt;p&gt;&lt;strong&gt;本章内容&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;以简洁方式实现简单的属性&lt;/li&gt;
+&lt;li&gt;更简洁地初始化对象和集合&lt;/li&gt;
+&lt;li&gt;为本地数据创建匿名类型&lt;/li&gt;
+&lt;li&gt;使用 lambda 表达式构建委托和表达式树&lt;/li&gt;
+&lt;li&gt;用查询表达式简化复杂查询的表示&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;C# 2 的新特性大多相互独立。可空值类型依赖于泛型，但它们仍是独立的功能，并未共同构建某个总体目标。&lt;/p&gt;
+&lt;p&gt;C# 3 则不同。它包含许多新特性，每个特性本身都有其用途，但几乎所有这些特性都共同服务于 LINQ 这个更大的目标。本章将逐一介绍每个特性，然后演示它们如何协同工作。我们要看的第一个特性是唯一与 LINQ 没有直接关联的一个。&lt;/p&gt;
+&lt;h1 id="自动实现的属性"&gt;自动实现的属性&lt;a class="anchor" href="#%e8%87%aa%e5%8a%a8%e5%ae%9e%e7%8e%b0%e7%9a%84%e5%b1%9e%e6%80%a7"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;在 C# 3 之前，每个属性都必须手动实现，包含 &lt;code&gt;get&lt;/code&gt; 和/或 &lt;code&gt;set&lt;/code&gt; 访问器的主体。编译器乐意为类似字段的事件提供实现，但对属性却不提供。这意味着存在大量如下所示的属性：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-csharp" data-lang="csharp"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;string&lt;/span&gt; name;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;string&lt;/span&gt; Name
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;get&lt;/span&gt; { &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; name; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;set&lt;/span&gt; { name = &lt;span style="color:#66d9ef"&gt;value&lt;/span&gt;; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;代码风格不同，格式也会不同，但无论属性是写成一行、11 行，还是介于两者之间的五行（如前例所示），它始终只是噪音。这是一种非常冗长的方式，来表达想要一个字段并通过属性将其值暴露给调用者的意图。&lt;/p&gt;
+&lt;p&gt;C# 3 通过使用&lt;strong&gt;自动实现的属性&lt;/strong&gt;（通常称为自动属性或 autoprops）大大简化了这一点。这些属性没有访问器主体；编译器提供实现。前面所有代码都可以替换为一行：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-csharp" data-lang="csharp"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;string&lt;/span&gt; Name { &lt;span style="color:#66d9ef"&gt;get&lt;/span&gt;; &lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;; }&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;注意，现在源代码中没有字段声明。仍然存在一个字段，但它是由编译器自动为你创建的，并且其名称无法在 C# 代码中的任何地方被引用。&lt;/p&gt;
+&lt;p&gt;在 C# 3 中，不能声明只读的自动实现的属性，也不能在声明时提供初始值。这两个特性最终在 C# 6 中引入，并在 8.2 节中描述。在 C# 6 之前，一种相当常见的做法是通过提供私有 &lt;code&gt;set&lt;/code&gt; 访问器来模拟只读属性，如下所示：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-csharp" data-lang="csharp"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;string&lt;/span&gt; Name { &lt;span style="color:#66d9ef"&gt;get&lt;/span&gt;; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;; }&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;C# 3 中自动实现的属性的引入，在减少样板代码方面产生了巨大影响。它们仅在属性只是简单地获取和设置字段值时有用，但根据我的经验，这占了属性的很大一部分。&lt;/p&gt;</description></item></channel></rss>

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>p3 c# 6 on Zimang Book</title><link>https://zimang.fun/my2026/2trans/csharp_in_depth/p3/</link><description>Recent content in p3 c# 6 on Zimang Book</description><generator>Hugo</generator><language>en</language><atom:link href="https://zimang.fun/my2026/2trans/csharp_in_depth/p3/index.xml" rel="self" type="application/rss+xml"/><item><title>精简代码的功能集</title><link>https://zimang.fun/my2026/2trans/csharp_in_depth/p3/a_sm%C3%B6rg%C3%A5sbord_of_features_for_concise_code/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://zimang.fun/my2026/2trans/csharp_in_depth/p3/a_sm%C3%B6rg%C3%A5sbord_of_features_for_concise_code/</guid><description>&lt;p&gt;本章涵盖：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;避免引用静态成员时的代码混乱&lt;/li&gt;
+&lt;li&gt;在导入扩展方法时更具选择性&lt;/li&gt;
+&lt;li&gt;在集合初始化器中使用扩展方法&lt;/li&gt;
+&lt;li&gt;在对象初始化器中使用索引器&lt;/li&gt;
+&lt;li&gt;编写更少的显式空值检查&lt;/li&gt;
+&lt;li&gt;仅捕获你真正感兴趣的异常&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;本章是各种功能的集合。除了以日益精炼的方式表达代码意图之外，没有贯穿始终的特定主题。本章中的功能是在所有显而易见的功能分组方式都被使用后剩下的那些。然而，这丝毫不会削弱它们的实用性。&lt;/p&gt;
+&lt;h1 id="使用静态指令"&gt;&lt;strong&gt;使用静态指令&lt;/strong&gt;&lt;a class="anchor" href="#%e4%bd%bf%e7%94%a8%e9%9d%99%e6%80%81%e6%8c%87%e4%bb%a4"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;我们将看到的第一个功能提供了一种更简单的方式来引用类型的静态成员，包括扩展方法。&lt;/p&gt;
+&lt;h2 id="导入静态成员"&gt;&lt;strong&gt;导入静态成员&lt;/strong&gt;&lt;a class="anchor" href="#%e5%af%bc%e5%85%a5%e9%9d%99%e6%80%81%e6%88%90%e5%91%98"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;此功能的典型例子是 &lt;code&gt;System.Math&lt;/code&gt;，它是一个静态类，因此只有静态成员。你将编写一个方法，将极坐标（一个角度和一个距离）转换为笛卡尔坐标（熟悉的 (x, y) 模型），并使用更人性化的度数而不是弧度来表示角度。图 10.1 给出了一个具体示例，展示了一个点如何在两种坐标系中表示。如果你对数学部分不太熟悉也不用担心；这只是一个在短代码中使用大量静态成员的例子。
+（图注：100 30° 极坐标 (100, 30°) 笛卡尔坐标：(86.6, 50) 图 10.1 极坐标和笛卡尔坐标示例）&lt;/p&gt;
+&lt;p&gt;假设你已经有一个简单表示笛卡尔坐标的 &lt;code&gt;Point&lt;/code&gt; 类型。转换本身是相当简单的三角学：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;将角度从度转换为弧度，乘以 π / 180。常数 π 可通过 &lt;code&gt;Math.PI&lt;/code&gt; 获得。&lt;/li&gt;
+&lt;li&gt;使用 &lt;code&gt;Math.Cos&lt;/code&gt; 和 &lt;code&gt;Math.Sin&lt;/code&gt; 方法计算出模长为 1 的点的 x 和 y 分量，然后进行乘法放大。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;下面的清单展示了完整的方法，其中 &lt;code&gt;System.Math&lt;/code&gt; 的使用以粗体显示。为方便起见，我省略了类声明。它可以在一个 &lt;code&gt;CoordinateConverter&lt;/code&gt; 类中，也可以是 &lt;code&gt;Point&lt;/code&gt; 类型本身的工厂方法。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;清单 10.1 C# 5 中的极坐标到笛卡尔坐标转换&lt;/strong&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-csharp" data-lang="csharp"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;using&lt;/span&gt; System;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;static&lt;/span&gt; Point PolarToCartesian(&lt;span style="color:#66d9ef"&gt;double&lt;/span&gt; degrees, &lt;span style="color:#66d9ef"&gt;double&lt;/span&gt; magnitude)
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;double&lt;/span&gt; radians = degrees * Math.PI / &lt;span style="color:#ae81ff"&gt;180&lt;/span&gt;; &lt;span style="color:#75715e"&gt;// 将度转换为弧度&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;new&lt;/span&gt; Point(
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; Math.Cos(radians) * magnitude, &lt;span style="color:#75715e"&gt;// 用于完成转换的三角学计算&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; Math.Sin(radians) * magnitude);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;虽然这段代码读起来并不太难，但你可以想象，当你编写更多数学相关代码时，重复的 &lt;code&gt;Math.&lt;/code&gt; 会使代码变得相当混乱。&lt;/p&gt;</description></item><item><title>字符串属性</title><link>https://zimang.fun/my2026/2trans/csharp_in_depth/p3/stringy_features/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://zimang.fun/my2026/2trans/csharp_in_depth/p3/stringy_features/</guid><description>&lt;p&gt;本章涵盖：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;使用内插字符串字面量实现更易读的格式化&lt;/li&gt;
+&lt;li&gt;使用FormattableString进行本地化和自定义格式化&lt;/li&gt;
+&lt;li&gt;使用nameof进行易于重构的引用&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;每个人都知道如何使用字符串。即使字符串不是你学习的第一个.NET数据类型，也很可能是第二个。在.NET的发展历程中，string类本身并没有太大变化，自C#1以来，C#语言也没有引入太多面向字符串的特性。然而，C#6通过另一种字符串字面量和一个新运算符改变了这一点。你将在本章详细研究这两者，但值得记住的是，字符串本身根本没有改变。这两个特性只是提供了获取字符串的新方法，仅此而已。&lt;/p&gt;
+&lt;p&gt;就像你在第8章看到的特性一样，字符串内插并不能让你做以前做不到的事情；它只是让你更清晰、更简洁地完成。这并不是贬低这个特性的重要性。任何能让你更快地编写更清晰的代码，并且之后能更快地阅读的东西，都会提高你的生产力。&lt;/p&gt;
+&lt;p&gt;nameof运算符是C#6中真正的新功能，但它是一个相当小的特性。它所做的只是允许你获取代码中已经出现的标识符，但在执行时作为字符串。它不会像LINQ或async/await那样改变你的世界，但它有助于避免拼写错误，并允许重构工具为你做更多工作。在我向你展示任何新内容之前，让我们回顾一下你已经知道的内容。&lt;/p&gt;
+&lt;h1 id="net中字符串格式化回顾"&gt;.NET中字符串格式化回顾&lt;a class="anchor" href="#net%e4%b8%ad%e5%ad%97%e7%ac%a6%e4%b8%b2%e6%a0%bc%e5%bc%8f%e5%8c%96%e5%9b%9e%e9%a1%be"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;你几乎肯定知道本节中的所有内容。你可能已经使用字符串很多年了，而且几乎可以肯定，从你使用C#开始就一直在用。尽管如此，为了理解C#6中的内插字符串字面量特性是如何工作的，最好把这些知识牢记在心。请耐心听我讲解.NET处理字符串格式化的基础知识。我保证我们很快就会讲到新东西。&lt;/p&gt;
+&lt;h2 id="简单字符串格式化"&gt;简单字符串格式化&lt;a class="anchor" href="#%e7%ae%80%e5%8d%95%e5%ad%97%e7%ac%a6%e4%b8%b2%e6%a0%bc%e5%bc%8f%e5%8c%96"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;如果你像我一样，你喜欢通过编写微不足道的控制台应用程序来试验新语言，这些应用程序没有任何用处，但能给你信心和坚实的基础，以便进行更令人印象深刻的壮举。因此，我不记得我已经用多少种语言实现了以下功能——询问用户的名字，然后向该用户问好：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-csharp" data-lang="csharp"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Console.Write(&lt;span style="color:#e6db74"&gt;&amp;#34;What&amp;#39;s your name? &amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;string&lt;/span&gt; name = Console.ReadLine();
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Console.WriteLine(&lt;span style="color:#e6db74"&gt;&amp;#34;Hello, {0}!&amp;#34;&lt;/span&gt;, name);&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;最后一行是本章最相关的一行。它使用了Console.WriteLine的一个重载，该重载接受一个包含格式项的组合格式字符串，然后是要替换这些格式项的参数。前面的示例有一个格式项{0}，它被name变量的值替换。格式项中的数字指定要填充空缺的参数索引（其中0表示第一个值，1表示第二个，依此类推）。&lt;/p&gt;
+&lt;p&gt;这种模式用于各种API中。最明显的例子是string类中的静态Format方法，它只是适当地格式化字符串。到目前为止，一切都很好。让我们做一些更复杂的事情。&lt;/p&gt;
+&lt;h2 id="使用格式字符串进行自定义格式化"&gt;使用格式字符串进行自定义格式化&lt;a class="anchor" href="#%e4%bd%bf%e7%94%a8%e6%a0%bc%e5%bc%8f%e5%ad%97%e7%ac%a6%e4%b8%b2%e8%bf%9b%e8%a1%8c%e8%87%aa%e5%ae%9a%e4%b9%89%e6%a0%bc%e5%bc%8f%e5%8c%96"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;澄清一下，我包含这个小节的动机既是为了我未来的自己，也是为了你，亲爱的读者。如果MSDN显示我访问任何给定页面的次数，那么关于组合格式字符串的页面的访问次数将会是惊人的。我总是忘记具体内容和使用的术语，我想如果我把这些信息放在这里，我可能会开始更好地记住它。我希望你同样觉得它有用。&lt;/p&gt;
+&lt;p&gt;组合格式字符串中的每个格式项指定要格式化的参数的索引，但它还可以指定以下选项来格式化值：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;对齐方式：指定最小宽度以及值应左对齐还是右对齐。右对齐用正值表示；左对齐用负值表示。&lt;/li&gt;
+&lt;li&gt;值的格式字符串。这可能最常用于日期和时间值或数字。例如，要根据ISO-8601格式化日期，可以使用格式字符串yyyy-MM-dd。要将数字格式化为货币值，可以使用格式字符串C。格式字符串的含义取决于要格式化的值的类型，因此您需要查阅相关文档以选择正确的格式字符串。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;图9.1显示了可用于显示价格的组合格式字符串的所有部分。&lt;/p&gt;
+&lt;p&gt;&lt;img src="https://ddd-1313653702.cos.ap-guangzhou.myqcloud.com/now/20260126214203989.png" alt="image-20260126214203964" /&gt;&lt;/p&gt;
+&lt;p&gt;对齐方式和格式字符串是独立可选的；您可以指定其中一个、两个或不指定。格式项中的逗号表示对齐方式，冒号表示格式字符串。如果您需要在格式字符串中使用逗号，那没问题；没有第二个对齐值的概念。&lt;/p&gt;
+&lt;p&gt;作为一个稍后扩展的具体示例，让我们在图9.1的代码中使用更广泛的上下文，显示不同长度的结果以演示对齐的要点。清单9.1显示价格（$95.25）、小费（$19.05）和总计（$114.30），将标签左对齐，数值右对齐。&lt;/p&gt;
+&lt;p&gt;在默认使用美国英语文化设置的计算机上，输出如下：&lt;/p&gt;
+&lt;pre tabindex="0"&gt;&lt;code&gt;价格： $95.25
+小费： $19.05
+总计： $114.30&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;为了使数值右对齐（或者从另一个角度看，左边用空格填充），代码使用了对齐值9。如果你有一个巨大的账单（例如，一百万美元），对齐将不起作用；它只指定最小宽度。如果你想编写右对齐所有可能值的代码，你必须先计算出最大值会有多宽。这是相当令人不快的代码，恐怕C#6中没有任何东西能使其变得更容易。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;清单9.1：以对齐方式显示价格、小费和总计&lt;/strong&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-csharp" data-lang="csharp"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;decimal&lt;/span&gt; price = &lt;span style="color:#ae81ff"&gt;95.25&lt;/span&gt;m;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;decimal&lt;/span&gt; tip = price * &lt;span style="color:#ae81ff"&gt;0.2&lt;/span&gt;m; &lt;span style="color:#75715e"&gt;// 20% 小费&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Console.WriteLine(&lt;span style="color:#e6db74"&gt;&amp;#34;价格: {0,9:C}&amp;#34;&lt;/span&gt;, price);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Console.WriteLine(&lt;span style="color:#e6db74"&gt;&amp;#34;小费: {0,9:C}&amp;#34;&lt;/span&gt;, tip);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Console.WriteLine(&lt;span style="color:#e6db74"&gt;&amp;#34;总计: {0,9:C}&amp;#34;&lt;/span&gt;, price + tip);&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;当我在美国英语文化的计算机上显示清单9.1的输出时，关于文化的部分很重要。在使用英国英语文化的计算机上，代码将使用£符号。在法国文化的计算机上，十进制分隔符将变为逗号，货币符号将变为欧元符号，并且该符号将位于字符串的末尾而不是开头！这就是本地化的乐趣，接下来你将看到。&lt;/p&gt;
+&lt;h2 id="本地化"&gt;本地化&lt;a class="anchor" href="#%e6%9c%ac%e5%9c%b0%e5%8c%96"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;广义上说，本地化是确保您的代码为所有用户做正确的事情，无论他们身处世界何处。任何声称本地化简单的人要么比我有经验得多，要么做得不够多，不知道它有多痛苦。考虑到地球基本上是圆的，它似乎确实有很多棘手的角落情况需要处理。本地化在所有编程语言中都是痛苦的，但每种语言都有稍微不同的解决问题的方式。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;注意&lt;/strong&gt;：虽然我在本节中使用术语&amp;quot;本地化&amp;quot;，但其他人可能更喜欢术语&amp;quot;全球化&amp;quot;。微软使用这两个术语的方式与其他行业机构略有不同，而且差异有些微妙。专家们，请原谅我这里的粗略说明；大局比术语的细节更重要，仅此一次。&lt;/p&gt;
+&lt;p&gt;在.NET中，为了本地化目的，最重要的类型是CultureInfo。它负责一种语言（如英语）的文化偏好，或特定位置的语言（如加拿大的法语），或特定位置的语言的特定变体（如台湾使用的简体中文）。这些文化偏好包括各种翻译（例如，用于星期几的单词），并指示文本如何排序以及数字如何格式化（是使用句点还是逗号作为十进制分隔符）等等。&lt;/p&gt;
+&lt;p&gt;通常，您不会在方法签名中看到CultureInfo，而是看到IFormatProvider接口，CultureInfo实现了该接口。大多数格式化方法都有重载，其中IFormatProvider作为第一个参数，位于格式字符串本身之前。例如，考虑string.Format中的这两个签名：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-csharp" data-lang="csharp"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;static&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;string&lt;/span&gt; Format(IFormatProvider provider, &lt;span style="color:#66d9ef"&gt;string&lt;/span&gt; format, &lt;span style="color:#66d9ef"&gt;params&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;object&lt;/span&gt;[] args)
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;static&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;string&lt;/span&gt; Format(&lt;span style="color:#66d9ef"&gt;string&lt;/span&gt; format, &lt;span style="color:#66d9ef"&gt;params&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;object&lt;/span&gt;[] args)&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;通常，如果您提供仅相差一个参数的重载，那么该参数是最后一个，因此您可能希望provider参数在args之后。但是，这行不通，因为args是一个参数数组（它使用params修饰符）。如果一个方法有参数数组，那么它必须是最后一个参数。&lt;/p&gt;</description></item><item><title>超简洁的属性和表达式体成员</title><link>https://zimang.fun/my2026/2trans/csharp_in_depth/p3/super_sleek_properties_and_exp_bodied_members/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://zimang.fun/my2026/2trans/csharp_in_depth/p3/super_sleek_properties_and_exp_bodied_members/</guid><description>&lt;p&gt;&lt;strong&gt;本章涵盖&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;自动实现只读属性&lt;/li&gt;
+&lt;li&gt;在声明处初始化自动实现的属性&lt;/li&gt;
+&lt;li&gt;使用表达式体成员消除不必要的样板代码&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;某些版本的 C# 有一个统一的、几乎所有其他特性都为之服务的大特性。例如，C# 3 引入了 LINQ，C# 5 引入了异步。C# 6 则不同，但它有一个总的主题：几乎所有特性都有助于使代码更清晰、更简单、更具可读性。C# 6 不在于做更多的事，而在于用更少的代码做相同的工作。&lt;/p&gt;
+&lt;p&gt;本章要介绍的特性是关于属性和其他简单代码的。当不涉及太多逻辑时，去除即使是最小的样板代码（例如大括号和 return 语句）也能产生很大的不同。尽管这里的特性听起来可能不那么令人印象深刻，但我对它们在真实代码中的影响感到惊讶。我们将从属性开始，然后讨论方法、索引器和运算符。&lt;/p&gt;
+&lt;h1 id="属性简史"&gt;&lt;strong&gt;属性简史&lt;/strong&gt;&lt;a class="anchor" href="#%e5%b1%9e%e6%80%a7%e7%ae%80%e5%8f%b2"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;C# 从第一个版本开始就有属性。尽管其核心功能没有改变，但在源代码中表达它们的方式已逐渐变得更简单、更通用。属性允许你在 API 中区分状态的访问和操作方式与状态的实现方式。&lt;/p&gt;
+&lt;p&gt;例如，假设你想表示二维空间中的一个点。你可以使用公共字段轻松表示，如下所示。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;清单 8.1 具有公共字段的 Point 类&lt;/strong&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-csharp" data-lang="csharp"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;sealed&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Point&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;double&lt;/span&gt; X;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;double&lt;/span&gt; Y;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;乍一看，这似乎还不错，但类的能力（“我可以访问其 X 和 Y 值”）与实现（“我将使用两个 double 字段”）紧密耦合。但此时，实现已经失去了控制。只要类状态直接通过字段暴露，你就无法做到以下事情：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;在设置新值时执行验证（例如，防止 X 和 Y 坐标为无穷大或非数值）&lt;/li&gt;
+&lt;li&gt;在获取值时执行计算（例如，如果你想以不同的格式存储字段——对于点来说不太可能，但在其他情况下完全可行）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;你可能会说，当你发现需要类似这样的功能时，你以后总可以将字段更改为属性，但这是一个破坏性更改，你可能希望避免。（它破坏了源代码兼容性、二进制兼容性和反射兼容性。仅仅为了避免从一开始就使用属性，这是一个很大的风险。）&lt;/p&gt;
+&lt;p&gt;在 C# 1 中，语言几乎没有为属性提供任何帮助。基于属性的清单 8.1 版本需要手动声明后备字段以及每个属性的 getter 和 setter，如下所示。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;清单 8.2 C# 1 中具有属性的 Point 类&lt;/strong&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-csharp" data-lang="csharp"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;sealed&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Point&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;double&lt;/span&gt; x, y;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;double&lt;/span&gt; X { &lt;span style="color:#66d9ef"&gt;get&lt;/span&gt; { &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; x; } &lt;span style="color:#66d9ef"&gt;set&lt;/span&gt; { x = &lt;span style="color:#66d9ef"&gt;value&lt;/span&gt;; } }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;double&lt;/span&gt; Y { &lt;span style="color:#66d9ef"&gt;get&lt;/span&gt; { &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; y; } &lt;span style="color:#66d9ef"&gt;set&lt;/span&gt; { y = &lt;span style="color:#66d9ef"&gt;value&lt;/span&gt;; } }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;你可能会说，许多属性一开始只是简单地读取和写入字段，没有额外的验证、计算或其他任何东西，并且在代码的整个历史中都保持这种状态。像这样的属性本可以作为字段公开，但很难预测哪些属性以后可能需要额外的代码。即使你能准确预测，也会感觉自己在没有理由的情况下操作两个抽象级别。对我来说，属性充当了类型提供的契约的一部分：其宣传的功能。字段只是实现细节；它们是盒子内部的机制，在绝大多数情况下用户不需要知道。我倾向于在几乎所有情况下都将字段设为私有。&lt;/p&gt;</description></item></channel></rss>
